@@ -2,8 +2,7 @@
 
 import { useState, useRef } from "react"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
-import { Bot, Sparkles, Plus, Play, ChevronRight, MoreVertical, Copy, Trash2, GripVertical } from "lucide-react"
-import { AgentAddNodePopover } from "@/components/agent-add-node-popover"
+import { Bot, Sparkles, Play, ChevronRight, MoreVertical, Copy, Trash2, GripVertical } from "lucide-react"
 
 interface AgentCoreNodeData {
   name: string
@@ -19,13 +18,6 @@ export function AgentCoreNode({ data, selected, id }: NodeProps) {
   const nodeData = data as AgentCoreNodeData
   const [isHovered, setIsHovered] = useState(false)
   const [showContextMenu, setShowContextMenu] = useState(false)
-  const [showAddPopover, setShowAddPopover] = useState(false)
-  const addButtonRef = useRef<HTMLButtonElement>(null)
-
-  const handleAddNodeFromPopover = (type: string) => {
-    nodeData.onAddNode?.(type, id)
-    setShowAddPopover(false)
-  }
 
   return (
     <div className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
@@ -106,33 +98,11 @@ export function AgentCoreNode({ data, selected, id }: NodeProps) {
         </div>
       )}
 
-      {/* Add Button */}
-      {(isHovered || selected) && (
-        <button
-          ref={addButtonRef}
-          onClick={(e) => {
-            e.stopPropagation()
-            setShowAddPopover(true)
-          }}
-          className="absolute -right-4 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 translate-x-full items-center justify-center rounded-full border border-white/20 bg-[#1a1a25]/90 text-muted-foreground shadow-lg backdrop-blur-sm transition-all hover:border-emerald-500/50 hover:bg-emerald-500/20 hover:text-emerald-400 hover:scale-110"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      )}
 
-      {showAddPopover && (
-        <AgentAddNodePopover
-          isOpen={showAddPopover}
-          onClose={() => setShowAddPopover(false)}
-          onAddNode={handleAddNodeFromPopover}
-          triggerRef={addButtonRef}
-        />
-      )}
 
       <div
-        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[280px] ${
-          selected ? "border-emerald-500 shadow-lg shadow-emerald-500/20" : "border-white/10 hover:border-white/20"
-        }`}
+        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[280px] ${selected ? "border-emerald-500 shadow-lg shadow-emerald-500/20" : "border-white/10 hover:border-white/20"
+          }`}
       >
         <Handle
           type="target"

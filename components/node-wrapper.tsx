@@ -2,8 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Plus, Play, ChevronRight, MoreVertical, Copy, Trash2, GripVertical } from "lucide-react"
-import { AddNodePopover } from "./add-node-popover"
+import { Play, ChevronRight, MoreVertical, Copy, Trash2, GripVertical } from "lucide-react"
 
 type NodeWrapperProps = {
   children: React.ReactNode
@@ -35,22 +34,10 @@ export function NodeWrapper({
   onCopyNode,
 }: NodeWrapperProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [showAddPopover, setShowAddPopover] = useState(false)
   const [showContextMenu, setShowContextMenu] = useState(false)
-  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 })
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 })
-  const addButtonRef = useRef<HTMLButtonElement>(null)
   const contextMenuRef = useRef<HTMLDivElement>(null)
   const nodeRef = useRef<HTMLDivElement>(null)
-
-  const handleAddClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (addButtonRef.current) {
-      const rect = addButtonRef.current.getBoundingClientRect()
-      setPopoverPosition({ x: rect.right + 10, y: rect.top - 50 })
-    }
-    setShowAddPopover(true)
-  }, [])
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -177,29 +164,6 @@ export function NodeWrapper({
 
       {/* Node Content */}
       {children}
-
-      {/* Add Button - Shows on right side when no outgoing connection */}
-      {!hasOutgoingConnection && (isHovered || selected) && (
-        <button
-          ref={addButtonRef}
-          onClick={handleAddClick}
-          className="absolute -right-4 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 translate-x-full items-center justify-center rounded-full border border-white/20 bg-card/90 text-muted-foreground shadow-lg backdrop-blur-sm transition-all hover:border-violet-500/50 hover:bg-violet-500/20 hover:text-violet-400"
-          title="Add connected node"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      )}
-
-      {/* Add Node Popover */}
-      <AddNodePopover
-        isOpen={showAddPopover}
-        onClose={() => setShowAddPopover(false)}
-        position={popoverPosition}
-        onAddNode={(type) => {
-          onAddNode?.(type, nodeId)
-          setShowAddPopover(false)
-        }}
-      />
     </div>
   )
 }
