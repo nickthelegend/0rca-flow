@@ -25,6 +25,7 @@ import "@xyflow/react/dist/style.css"
 import { Button } from "@/components/ui/button"
 import { Cloud, Share2, Pencil, Play, MessageSquare } from "lucide-react"
 import { LogoDropdown } from "@/components/logo-dropdown"
+import { ShareDropdown } from "@/components/share-dropdown"
 import { LeftToolbar } from "@/components/left-toolbar"
 import { BottomToolbar } from "@/components/bottom-toolbar"
 import { NodePropertiesPanel } from "@/components/node-properties-panel"
@@ -133,9 +134,11 @@ function AgentBuilderInner() {
   const [isEditingName, setIsEditingName] = useState(false)
   const [activeTool, setActiveTool] = useState<"select" | "pan">("select")
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(false)
   const [showAddNodePopover, setShowAddNodePopover] = useState(false)
   const [showTestPanel, setShowTestPanel] = useState(false)
+  const [isLogoDropdownOpen, setIsLogoDropdownOpen] = useState(false)
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -406,10 +409,12 @@ function AgentBuilderInner() {
               <Cloud className="w-4 h-4 mr-2" />
               Synced
             </Button>
-            <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
+            <ShareDropdown
+              onPublish={(visibility) => {
+                console.log(`Publishing agent as ${visibility}`)
+                // Add your publish logic here
+              }}
+            />
             <AIChatbot />
             <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
               <Play className="w-4 h-4 mr-2" />
@@ -420,16 +425,18 @@ function AgentBuilderInner() {
       </div>
 
       {/* Left Toolbar */}
-      <LeftToolbar
-        activeTool={activeTool}
-        onToolChange={setActiveTool}
-        onAddNode={handleToolbarAddNode}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onFitView={() => fitView()}
-        showPropertiesPanel={showPropertiesPanel}
-        isAgentBuilder={true}
-      />
+      {!isLogoDropdownOpen && !showPropertiesPanel && (
+        <LeftToolbar
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
+          onAddNode={handleToolbarAddNode}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onFitView={() => fitView()}
+          showPropertiesPanel={showPropertiesPanel}
+          isAgentBuilder={true}
+        />
+      )}
 
       {/* Properties Panel */}
       {showPropertiesPanel && selectedNode && (

@@ -41,7 +41,10 @@ import { AddNodePopover } from "@/components/add-node-popover"
 import { AddAgentPopover } from "@/components/add-agent-popover"
 import { AIChatbot } from "@/components/ai-chatbot"
 
+
+
 import { LogoDropdown } from "@/components/logo-dropdown"
+import { ShareDropdown } from "@/components/share-dropdown"
 import { LeftToolbar } from "@/components/left-toolbar"
 import { BottomToolbar } from "@/components/bottom-toolbar"
 import { NodePropertiesPanel } from "@/components/node-properties-panel"
@@ -156,6 +159,7 @@ function WorkflowBuilderInner() {
   const [showAddNodePopover, setShowAddNodePopover] = useState(false)
   const [showAddAgentPopover, setShowAddAgentPopover] = useState(false)
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
+  const [isLogoDropdownOpen, setIsLogoDropdownOpen] = useState(false)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const nodeIdCounter = useRef(0)
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -468,10 +472,12 @@ function WorkflowBuilderInner() {
               <Cloud className="w-4 h-4 mr-2" />
               Synced
             </Button>
-            <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
+            <ShareDropdown
+              onPublish={(visibility) => {
+                console.log(`Publishing as ${visibility}`)
+                // Add your publish logic here
+              }}
+            />
             <AIChatbot />
             <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white">
               Deploy
@@ -481,15 +487,17 @@ function WorkflowBuilderInner() {
       </div>
 
       {/* Left Toolbar */}
-      <LeftToolbar
-        activeTool={activeTool}
-        onToolChange={setActiveTool}
-        onAddNode={handleToolbarAddNode}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onFitView={() => fitView()}
-        showPropertiesPanel={showPropertiesPanel}
-      />
+      {!isLogoDropdownOpen && !showPropertiesPanel && (
+        <LeftToolbar
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
+          onAddNode={handleToolbarAddNode}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onFitView={() => fitView()}
+          showPropertiesPanel={showPropertiesPanel}
+        />
+      )}
 
       {/* Properties Panel */}
       {showPropertiesPanel && selectedNode && (

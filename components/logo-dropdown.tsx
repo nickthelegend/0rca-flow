@@ -21,11 +21,16 @@ type LogoDropdownProps = {
   onDuplicate?: () => void
   onHome?: () => void
   onSignOut?: () => void
+  onOpenChange?: (isOpen: boolean) => void
 }
 
-export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut }: LogoDropdownProps) {
+export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut, onOpenChange }: LogoDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    onOpenChange?.(isOpen)
+  }, [isOpen, onOpenChange])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -55,7 +60,7 @@ export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut }: 
       type: "action",
       icon: Clock,
       label: "Recent Workflows",
-      onClick: () => {},
+      onClick: () => { },
     },
     { type: "divider" },
     {
@@ -68,34 +73,34 @@ export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut }: 
       type: "action",
       icon: Layers,
       label: "Workflows",
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       type: "action",
       icon: FolderOpen,
       label: "Library",
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       type: "action",
       icon: Cpu,
       label: "Engine",
       locked: true,
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       type: "action",
       icon: Code2,
       label: "Automation",
       locked: true,
-      onClick: () => {},
+      onClick: () => { },
     },
     { type: "divider" },
     {
       type: "action",
       icon: Settings,
       label: "Settings",
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       type: "action",
@@ -137,13 +142,12 @@ export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut }: 
                       setIsOpen(false)
                     }}
                     disabled={item.locked}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all ${
-                      item.highlight
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all ${item.highlight
                         ? "text-violet-400 hover:bg-violet-500/10"
                         : item.locked
                           ? "cursor-not-allowed text-muted-foreground/50"
                           : "text-foreground hover:bg-white/5"
-                    }`}
+                      }`}
                   >
                     <Icon className="h-4 w-4" />
                     <span className="flex-1">{item.label}</span>
