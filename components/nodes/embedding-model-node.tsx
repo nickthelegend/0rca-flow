@@ -1,0 +1,69 @@
+"use client"
+
+import { memo, useState } from "react"
+import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { Layers, Settings } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { NodeControls } from "./node-controls"
+
+export type EmbeddingModelNodeData = {
+  model: string
+  dimensions?: number
+  onAddNode?: (type: string, sourceNodeId: string) => void
+  onDeleteNode?: (nodeId: string) => void
+  onDuplicateNode?: (nodeId: string) => void
+  onCopyNode?: (nodeId: string) => void
+  hasOutgoingConnection?: boolean
+}
+
+function EmbeddingModelNode({ id, data, selected }: NodeProps<EmbeddingModelNodeData>) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <div className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <NodeControls
+        nodeId={id}
+        nodeName="Embedding Model"
+        nodeDescription="Create vector embeddings"
+        nodeIcon={<Layers className="h-3 w-3 text-white" />}
+        nodeColor="bg-chart-2"
+        selected={selected}
+        isHovered={isHovered}
+        hasOutgoingConnection={data.hasOutgoingConnection}
+        onAddNode={data.onAddNode}
+        onDeleteNode={data.onDeleteNode}
+        onDuplicateNode={data.onDuplicateNode}
+        onCopyNode={data.onCopyNode}
+      />
+
+      <Card
+        className={`min-w-[280px] border-2 bg-card transition-all ${
+          selected ? "border-primary shadow-lg" : "border-border"
+        }`}
+      >
+        <div className="flex items-center gap-3 border-b border-border bg-secondary/50 px-4 py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-chart-2">
+            <Layers className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-foreground">Embedding Model</h3>
+            <p className="text-xs text-muted-foreground">{data.model || "openai/text-embedding-3-small"}</p>
+          </div>
+          <Settings className="h-4 w-4 text-muted-foreground" />
+        </div>
+
+        <div className="space-y-2 p-4">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Dimensions:</span>
+            <span className="font-mono text-foreground">{data.dimensions || 1536}</span>
+          </div>
+        </div>
+
+        <Handle type="target" position={Position.Left} id="input" className="!bg-chart-2" />
+        <Handle type="source" position={Position.Right} id="embedding" className="!bg-chart-2" />
+      </Card>
+    </div>
+  )
+}
+
+export default memo(EmbeddingModelNode)
