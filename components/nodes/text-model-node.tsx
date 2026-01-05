@@ -5,7 +5,6 @@ import { Handle, Position, type NodeProps } from "@xyflow/react"
 import {
   MessageSquare,
   Settings,
-  Plus,
   Play,
   ChevronRight,
   MoreVertical,
@@ -15,7 +14,6 @@ import {
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { getStatusColor } from "@/lib/node-utils"
-import { AddNodePopover } from "@/components/add-node-popover"
 
 export type TextModelNodeData = {
   model: string
@@ -37,9 +35,7 @@ export type TextModelNodeData = {
 function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
   const status = data.status || "idle"
   const [isHovered, setIsHovered] = useState(false)
-  const [showAddPopover, setShowAddPopover] = useState(false)
   const [showContextMenu, setShowContextMenu] = useState(false)
-  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 })
 
   return (
     <div className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
@@ -177,30 +173,7 @@ function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
         <Handle type="source" position={Position.Right} id="output" className="!bg-primary" />
       </Card>
 
-      {/* Add Button */}
-      {!data.hasOutgoingConnection && (isHovered || selected) && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            const rect = e.currentTarget.getBoundingClientRect()
-            setPopoverPosition({ x: rect.right + 10, y: rect.top - 50 })
-            setShowAddPopover(true)
-          }}
-          className="absolute -right-4 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 translate-x-full items-center justify-center rounded-full border border-white/20 bg-card/90 text-muted-foreground shadow-lg backdrop-blur-sm transition-all hover:border-violet-500/50 hover:bg-violet-500/20 hover:text-violet-400"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      )}
 
-      <AddNodePopover
-        isOpen={showAddPopover}
-        onClose={() => setShowAddPopover(false)}
-        position={popoverPosition}
-        onAddNode={(type) => {
-          data.onAddNode?.(type, id)
-          setShowAddPopover(false)
-        }}
-      />
     </div>
   )
 }
