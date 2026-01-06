@@ -23,7 +23,7 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { Button } from "@/components/ui/button"
-import { Cloud, Share2, Pencil, Bot } from "lucide-react"
+import { Cloud, Share2, Pencil, Bot, X } from "lucide-react"
 import TextModelNode from "@/components/nodes/text-model-node"
 import EmbeddingModelNode from "@/components/nodes/embedding-model-node"
 import ToolNode from "@/components/nodes/tool-node"
@@ -40,6 +40,7 @@ import { AgentNode } from "@/components/nodes/agent-node"
 import { AddNodePopover } from "@/components/add-node-popover"
 import { AddAgentPopover } from "@/components/add-agent-popover"
 import { AIChatbot } from "@/components/ai-chatbot"
+import { Pricing } from "@/components/blocks/pricing"
 
 
 
@@ -123,10 +124,68 @@ const getDefaultNodeData = (type: string) => {
       return { url: "https://api.example.com", method: "GET" }
     case "agent":
       return { name: "AI Agent", description: "An autonomous AI agent", model: "openai/gpt-5" }
-    default:
       return {}
   }
 }
+
+const demoPlans = [
+  {
+    name: "STARTER",
+    price: "50",
+    yearlyPrice: "40",
+    period: "per month",
+    features: [
+      "Up to 10 projects",
+      "Basic analytics",
+      "48-hour support response time",
+      "Limited API access",
+      "Community support",
+    ],
+    description: "Perfect for individuals and small projects",
+    buttonText: "Start Free Trial",
+    href: "/sign-up",
+    isPopular: false,
+  },
+  {
+    name: "PROFESSIONAL",
+    price: "99",
+    yearlyPrice: "79",
+    period: "per month",
+    features: [
+      "Unlimited projects",
+      "Advanced analytics",
+      "24-hour support response time",
+      "Full API access",
+      "Priority support",
+      "Team collaboration",
+      "Custom integrations",
+    ],
+    description: "Ideal for growing teams and businesses",
+    buttonText: "Get Started",
+    href: "/sign-up",
+    isPopular: true,
+  },
+  {
+    name: "ENTERPRISE",
+    price: "299",
+    yearlyPrice: "239",
+    period: "per month",
+    features: [
+      "Everything in Professional",
+      "Custom solutions",
+      "Dedicated account manager",
+      "1-hour support response time",
+      "SSO Authentication",
+      "Advanced security",
+      "Custom contracts",
+      "SLA agreement",
+    ],
+    description: "For large organizations with specific needs",
+    buttonText: "Contact Sales",
+    href: "/contact",
+    isPopular: false,
+  },
+]
 
 function WorkflowBuilderInner() {
   const params = useParams()
@@ -160,6 +219,7 @@ function WorkflowBuilderInner() {
   const [showAddAgentPopover, setShowAddAgentPopover] = useState(false)
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
   const [isLogoDropdownOpen, setIsLogoDropdownOpen] = useState(false)
+  const [showPricing, setShowPricing] = useState(false)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const nodeIdCounter = useRef(0)
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -364,7 +424,11 @@ function WorkflowBuilderInner() {
   }, [])
 
   const handlePlay = useCallback(() => {
-    setShowExecution(true)
+    setShowPricing(true)
+  }, [])
+
+  const handleDeploy = useCallback(() => {
+    setShowPricing(true)
   }, [])
 
   const onUpdateNodeData = (nodeId: string, newData: any) => {
@@ -479,7 +543,10 @@ function WorkflowBuilderInner() {
               }}
             />
             <AIChatbot />
-            <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white">
+            <Button
+              onClick={handleDeploy}
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
+            >
               Deploy
             </Button>
           </div>
@@ -570,6 +637,40 @@ function WorkflowBuilderInner() {
 
       {/* Execution Panel */}
       {showExecution && <ExecutionPanel nodes={nodes} edges={edges} onClose={() => setShowExecution(false)} />}
+
+      {/* Pricing Overlay */}
+      {showPricing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full min-h-screen py-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="fixed top-6 right-6 z-[110] text-white/70 hover:text-white hover:bg-white/10"
+              onClick={() => setShowPricing(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <div className="container mx-auto px-4">
+              <Pricing plans={demoPlans} />
+            </div>
+
+            {/* Bypass for demo functionality - hidden trigger to actually run/deploy if needed */}
+            {/* For now, just a button at the bottom to continue for demo purposes */}
+            <div className="flex justify-center mt-8 pb-10">
+              <Button
+                variant="link"
+                className="text-white/30 hover:text-white/50"
+                onClick={() => {
+                  setShowPricing(false)
+                  setShowExecution(true)
+                }}
+              >
+                Skip to Execution (Demo)
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
