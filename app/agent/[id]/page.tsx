@@ -60,6 +60,7 @@ import {
   Hash,
   RefreshCw,
   Loader2,
+  ShieldCheck,
 } from "lucide-react"
 import { LogoDropdown } from "@/components/logo-dropdown"
 import { ShareDropdown } from "@/components/share-dropdown"
@@ -658,7 +659,15 @@ function AgentBuilderInner() {
                 // Add your publish logic here
               }}
             />
-            <AIChatbot />
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+              onClick={() => toast.info("Registration protocol pending implementation")}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Register Agent
+            </Button>
             <Button
               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20"
               onClick={handleDeploy}

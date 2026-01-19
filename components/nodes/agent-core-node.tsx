@@ -137,19 +137,9 @@ export function AgentCoreNode({ data, selected, id }: NodeProps) {
         </div>
 
         {/* Content */}
-        <div className="p-5 pb-8 space-y-4">
-          <div className="text-xs text-white/40 leading-relaxed italic">"{nodeData.description}"</div>
-
-          <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
-            <div className="flex flex-col">
-              <span className="text-[9px] text-white/30 uppercase font-black tracking-widest">Base Model</span>
-              <span className="text-xs text-emerald-400/80 font-mono">{nodeData.model}</span>
-            </div>
-            <div className="h-8 w-px bg-white/5" />
-            <div className="flex flex-col items-end">
-              <span className="text-[9px] text-white/30 uppercase font-black tracking-widest">Status</span>
-              <span className="text-[10px] text-emerald-500">Optimized</span>
-            </div>
+        <div className="p-5 pb-8 space-y-4 text-center">
+          <div className="text-sm text-white/50 leading-relaxed italic px-4 py-2 bg-white/[0.03] rounded-xl border border-white/5 inline-block">
+            "{nodeData.description}"
           </div>
         </div>
 
