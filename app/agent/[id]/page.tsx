@@ -23,7 +23,44 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { Button } from "@/components/ui/button"
-import { Cloud, Share2, Pencil, Play, MessageSquare } from "lucide-react"
+import {
+  Plus,
+  ArrowRight,
+  Settings,
+  Shield,
+  Bot,
+  FileText,
+  Wrench,
+  Brain,
+  BookOpen,
+  FileOutput,
+  Play,
+  Share2,
+  ChevronDown,
+  Pencil,
+  Trash2,
+  Copy,
+  Layout,
+  MousePointer2,
+  Hand,
+  Search,
+  Maximize2,
+  Minimize2,
+  Maximize,
+  Grid,
+  Zap,
+  Undo2,
+  Redo2,
+  Cloud,
+  MessageSquare,
+  Sparkles,
+  SearchIcon,
+  X,
+  PlusCircle,
+  Hash,
+  RefreshCw,
+  Loader2,
+} from "lucide-react"
 import { LogoDropdown } from "@/components/logo-dropdown"
 import { ShareDropdown } from "@/components/share-dropdown"
 import { LeftToolbar } from "@/components/left-toolbar"
@@ -52,6 +89,9 @@ import RouterNode from "@/components/nodes/router-node"
 import DebuggerNode from "@/components/nodes/debugger-node"
 import StateNode from "@/components/nodes/state-node"
 import WalletNode from "@/components/nodes/wallet-node"
+import { deployAgent } from "@/lib/deploy-actions"
+import { toast } from "sonner"
+import { DeploymentModal } from "@/components/deployment-modal"
 
 const nodeTypes: NodeTypes = {
   agentCore: AgentCoreNode as any,
@@ -141,6 +181,9 @@ function AgentBuilderInner() {
   const [edges, setEdges] = useState<Edge[]>([])
   const [agentName, setAgentName] = useState("Untitled Agent")
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
+  const [showDeploymentModal, setShowDeploymentModal] = useState(false)
+  const [deploymentResult, setDeploymentResult] = useState<any>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
@@ -243,6 +286,35 @@ function AgentBuilderInner() {
       setIsSaving(false)
     }
   }, [nodes, edges, agentName, agentId, walletAddress])
+
+  // Deploy Agent
+  const handleDeploy = useCallback(async () => {
+    setIsDeploying(true)
+    const toastId = toast.loading("Packaging agent.py and preparing for deployment...")
+
+    try {
+      // First save the current state
+      await handleSave()
+
+      const result = await deployAgent(agentId, nodes, edges)
+
+      if (result.success) {
+        setDeploymentResult(result)
+        setShowDeploymentModal(true)
+        toast.success(`Agent successfully exported and deployed!`, {
+          id: toastId,
+          description: `Live at: ${result.url}`
+        })
+      } else {
+        toast.error(`Deployment failed: ${result.error}`, { id: toastId })
+      }
+    } catch (error: any) {
+      console.error("Deployment failed:", error)
+      toast.error(`Critical error: ${error.message}`, { id: toastId })
+    } finally {
+      setIsDeploying(false)
+    }
+  }, [nodes, edges, agentId, handleSave])
 
   // Auto-save disabled as requested
   /*
@@ -587,9 +659,17 @@ function AgentBuilderInner() {
               }}
             />
             <AIChatbot />
-            <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
-              <Play className="w-4 h-4 mr-2" />
-              Deploy
+            <Button
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20"
+              onClick={handleDeploy}
+              disabled={isDeploying}
+            >
+              {isDeploying ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              {isDeploying ? "Deploying..." : "One-Click Deploy"}
             </Button>
           </div>
         </div>
@@ -683,6 +763,13 @@ function AgentBuilderInner() {
 
       {/* Test Panel */}
       {showTestPanel && <AgentTestPanel agentName={agentName} nodes={nodes} onClose={() => setShowTestPanel(false)} />}
+
+      {/* Deployment Status Modal */}
+      <DeploymentModal
+        isOpen={showDeploymentModal}
+        onClose={() => setShowDeploymentModal(false)}
+        deploymentData={deploymentResult}
+      />
     </div>
   )
 }
