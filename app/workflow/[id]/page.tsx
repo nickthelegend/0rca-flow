@@ -53,6 +53,10 @@ import { CodeExportDialog } from "@/components/code-export-dialog"
 import { ExecutionPanel } from "@/components/execution-panel"
 import { useParams, useRouter } from "next/navigation"
 import { usePrivyWallet } from "@/hooks/use-privy-wallet"
+import { supabase } from "@/lib/supabase"
+import JSZip from "jszip"
+import { generateAISDKCode } from "@/lib/code-generator"
+import { DeploymentConfigDialog, type DeploymentConfig } from "@/components/deployment-config-dialog"
 
 const nodeTypes: NodeTypes = {
   textModel: TextModelNode,
@@ -193,24 +197,12 @@ function WorkflowBuilderInner() {
   const { disconnect } = usePrivyWallet()
   const workflowId = params.id as string
 
-  const loadWorkflow = useCallback(() => {
-    if (typeof window === "undefined") return null
-    const stored = localStorage.getItem(`workflow-${workflowId}`)
-    if (stored) {
-      const data = JSON.parse(stored)
-      return data
-    }
-    return null
-  }, [workflowId])
-
-  const savedWorkflow = loadWorkflow()
-
-  const [nodes, setNodes] = useState<Node[]>(savedWorkflow?.nodes || initialNodes)
-  const [edges, setEdges] = useState<Edge[]>(savedWorkflow?.edges || initialEdges)
+  const [nodes, setNodes] = useState<Node[]>(initialNodes)
+  const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showCodeExport, setShowCodeExport] = useState(false)
   const [showExecution, setShowExecution] = useState(false)
-  const [workflowName, setWorkflowName] = useState(savedWorkflow?.name || "Untitled Workflow")
+  const [workflowName, setWorkflowName] = useState("Untitled Workflow")
   const [isEditingName, setIsEditingName] = useState(false)
   const [activeTool, setActiveTool] = useState<"select" | "pan">("select")
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
@@ -225,7 +217,7 @@ function WorkflowBuilderInner() {
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([
-    { nodes: savedWorkflow?.nodes || initialNodes, edges: savedWorkflow?.edges || initialEdges },
+    { nodes: initialNodes, edges: initialEdges },
   ])
   const [historyIndex, setHistoryIndex] = useState(0)
 
@@ -233,19 +225,69 @@ function WorkflowBuilderInner() {
 
   const selectedNode = selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) : null
 
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [showDeploymentConfig, setShowDeploymentConfig] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
+
+  // Load Workflow
   useEffect(() => {
-    if (typeof window === "undefined") return
-    if (nodes.length > 0) {
-      const workflowData = {
-        id: workflowId,
-        name: workflowName,
-        nodes,
-        edges,
-        updatedAt: new Date().toISOString(),
+    const fetchWorkflow = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("workflows")
+          .select("*")
+          .eq("id", workflowId)
+          .single()
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Error loading workflow:", error)
+          return
+        }
+
+        if (data) {
+          setNodes(data.nodes || initialNodes)
+          setEdges(data.edges || initialEdges)
+          setWorkflowName(data.name || "Untitled Workflow")
+        } else {
+          // Create if not exists (upsert logic in save, but maybe just leave generic for now or create on first save?)
+          // Ideally we should create it if it doesn't exist so we have a record.
+        }
+      } catch (e) {
+        console.error("Failed to fetch workflow", e)
       }
-      localStorage.setItem(`workflow-${workflowId}`, JSON.stringify(workflowData))
     }
+    fetchWorkflow()
+  }, [workflowId])
+
+  // Save Workflow Debounced
+  useEffect(() => {
+    const saveTimeout = setTimeout(async () => {
+      if (nodes.length === 0) return
+      setIsSaving(true)
+      try {
+        const { error } = await supabase
+          .from("workflows")
+          .upsert({
+            id: workflowId,
+            name: workflowName,
+            nodes,
+            edges,
+            updated_at: new Date().toISOString(),
+          })
+
+        if (error) throw error
+        setLastSaved(new Date())
+      } catch (error) {
+        console.error("Error saving workflow:", error)
+      } finally {
+        setIsSaving(false)
+      }
+    }, 2000) // 2 second debounce
+
+    return () => clearTimeout(saveTimeout)
   }, [nodes, edges, workflowName, workflowId])
+
 
   useEffect(() => {
     const maxId = Math.max(...nodes.map((n) => Number.parseInt(n.id) || 0), 0)
@@ -419,17 +461,178 @@ function WorkflowBuilderInner() {
   }, [history, historyIndex])
 
   const handleSave = useCallback(() => {
-    // Already auto-saving, but can add toast notification
-    console.log("[v0] Workflow saved")
+    // Already auto-saving
+    console.log("[0rca] Workflow saved")
   }, [])
 
   const handlePlay = useCallback(() => {
     setShowPricing(true)
   }, [])
 
+  const handleDownloadZip = useCallback(async () => {
+    try {
+      const code = generateAISDKCode(nodes, edges)
+      const zip = new JSZip()
+
+      // Package.json
+      zip.file("package.json", JSON.stringify({
+        name: `agent-${workflowId}`,
+        version: "1.0.0",
+        type: "module",
+        dependencies: {
+          "ai": "^4.0.0",
+          "@ai-sdk/openai": "^1.0.0",
+          "@ai-sdk/google": "^1.0.0",
+          "zod": "^3.22.4",
+          "dotenv": "^16.4.5",
+          "@hono/node-server": "^1.13.7",
+          "hono": "^4.6.14",
+          "tsx": "^4.19.2"
+        },
+        scripts: {
+          "start": "tsx index.ts"
+        }
+      }, null, 2))
+
+      // Workflow Code
+      zip.file("workflow.ts", code)
+
+      // Server Wrapper
+      const serverCode = `import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { runAgentWorkflow } from './workflow';
+import { config } from 'dotenv';
+config();
+
+const app = new Hono();
+
+app.get('/', (c) => c.text('Agent Running'));
+
+app.post('/', async (c) => {
+  try {
+    const body = await c.req.json();
+    const input = body.prompt || body.input || "";
+    const result = await runAgentWorkflow(input);
+    return c.json({ result });
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: String(e) }, 500);
+  }
+});
+
+const port = process.env.PORT || 8080;
+console.log(\`Server listening on port \${port}\`);
+serve({
+  fetch: app.fetch,
+  port: Number(port)
+});`
+
+      zip.file("index.ts", serverCode)
+      zip.file(".env.example", "OPENAI_API_KEY=\nGOOGLE_API_KEY=\n")
+
+      const content = await zip.generateAsync({ type: "blob" })
+      const url = URL.createObjectURL(content)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `agent-${workflowId}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error("Export failed:", e)
+    }
+  }, [nodes, edges, workflowId])
+
   const handleDeploy = useCallback(() => {
-    setShowPricing(true)
+    setShowDeploymentConfig(true)
   }, [])
+
+  const onDeployAgent = async (config: DeploymentConfig) => {
+    setIsDeploying(true)
+    try {
+      const code = generateAISDKCode(nodes, edges)
+      const zip = new JSZip()
+
+      // Package.json
+      zip.file("package.json", JSON.stringify({
+        name: `agent-${workflowId}`,
+        version: "1.0.0",
+        description: "0rca Agent",
+        type: "module",
+        dependencies: {
+          "ai": "^4.0.0",
+          "@ai-sdk/openai": "^1.0.0",
+          "@ai-sdk/google": "^1.0.0",
+          "zod": "^3.22.4",
+          "dotenv": "^16.4.5",
+          "@hono/node-server": "^1.13.7",
+          "hono": "^4.6.14",
+          "tsx": "^4.19.2"
+        },
+        scripts: {
+          "start": "tsx index.ts"
+        }
+      }, null, 2))
+
+      // Workflow Code
+      zip.file("workflow.ts", code)
+
+      // Server Wrapper
+      const serverCode = `import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { runAgentWorkflow } from './workflow';
+import { config } from 'dotenv';
+config();
+
+const app = new Hono();
+
+app.get('/', (c) => c.text('Agent Running'));
+
+app.post('/', async (c) => {
+  try {
+    const body = await c.req.json();
+    const input = body.prompt || body.input || "";
+    const result = await runAgentWorkflow(input);
+    return c.json({ result });
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: String(e) }, 500);
+  }
+});
+
+const port = process.env.PORT || 8080;
+console.log(\`Server listening on port \${port}\`);
+serve({
+  fetch: app.fetch,
+  port: Number(port)
+});`
+
+      zip.file("index.ts", serverCode)
+
+      const zipBlob = await zip.generateAsync({ type: "blob" })
+      const formData = new FormData()
+      formData.append("file", zipBlob, "agent.zip")
+      formData.append("envVars", JSON.stringify(config.envVars))
+
+      const res = await fetch("/api/deploy", {
+        method: "POST",
+        body: formData
+      })
+
+      if (!res.ok) throw new Error("Deployment failed: " + await res.text())
+
+      const data = await res.json()
+      alert(`Deployment Started! URL: ${data.url}`)
+      setShowDeploymentConfig(false)
+
+    } catch (e: any) {
+      console.error(e)
+      alert("Error: " + e.message)
+    } finally {
+      setIsDeploying(false)
+    }
+  }
 
   const onUpdateNodeData = (nodeId: string, newData: any) => {
     const newNodes = nodes.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node))
