@@ -1,10 +1,11 @@
 "use client"
-import { X, ChevronRight } from "lucide-react"
+import { X, ChevronRight, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
 
 type NodePropertiesPanelProps = {
   node: {
@@ -14,6 +15,7 @@ type NodePropertiesPanelProps = {
   } | null
   onClose: () => void
   onUpdateNodeData: (nodeId: string, data: Record<string, any>) => void
+  onDeleteNode?: (nodeId: string) => void
 }
 
 const nodeInfo: Record<string, { name: string; description: string; icon: string; color: string }> = {
@@ -89,9 +91,51 @@ const nodeInfo: Record<string, { name: string; description: string; icon: string
     icon: "🏁",
     color: "from-red-500 to-rose-500",
   },
+  agentCore: {
+    name: "Agent Core",
+    description: "The primary logic and brain of your autonomous AI agent.",
+    icon: "🤖",
+    color: "from-emerald-500 to-teal-500",
+  },
+  systemPrompt: {
+    name: "System Prompt",
+    description: "Core instructions and personality for your AI agent.",
+    icon: "📜",
+    color: "from-blue-500 to-indigo-500",
+  },
+  toolsConfig: {
+    name: "Tools Config",
+    description: "Configure external tools and APIs the agent can access.",
+    icon: "🛠️",
+    color: "from-orange-500 to-amber-500",
+  },
+  memory: {
+    name: "Memory",
+    description: "Manage short-term and long-term conversation context.",
+    icon: "🧠",
+    color: "from-purple-500 to-pink-500",
+  },
+  knowledgeBase: {
+    name: "Knowledge Base",
+    description: "Connect agent to documents and vector databases (RAG).",
+    icon: "📚",
+    color: "from-cyan-500 to-blue-500",
+  },
+  guardrails: {
+    name: "Guardrails",
+    description: "Input/output safety and content filtering policies.",
+    icon: "🛡️",
+    color: "from-red-500 to-rose-500",
+  },
+  outputParser: {
+    name: "Output Parser",
+    description: "Format and validate agent responses for downstream use.",
+    icon: "📤",
+    color: "from-yellow-500 to-orange-500",
+  },
 }
 
-export function NodePropertiesPanel({ node, onClose, onUpdateNodeData }: NodePropertiesPanelProps) {
+export function NodePropertiesPanel({ node, onClose, onUpdateNodeData, onDeleteNode }: NodePropertiesPanelProps) {
   if (!node) return null
 
   const info = nodeInfo[node.type] || {
@@ -262,6 +306,80 @@ export function NodePropertiesPanel({ node, onClose, onUpdateNodeData }: NodePro
           </div>
         )
 
+      case "agentCore":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Agent Name</Label>
+              <Input
+                value={node.data.name || ""}
+                onChange={(e) => updateData("name", e.target.value)}
+                placeholder="My AI Agent"
+                className="h-9 border-white/10 bg-white/5"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Model</Label>
+              <Select value={node.data.model || "openai/gpt-5"} onValueChange={(v) => updateData("model", v)}>
+                <SelectTrigger className="h-9 border-white/10 bg-white/5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="openai/gpt-5">OpenAI GPT-5</SelectItem>
+                  <SelectItem value="anthropic/claude-3-5-sonnet">Claude 3.5 Sonnet</SelectItem>
+                  <SelectItem value="google/gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Description</Label>
+              <Textarea
+                value={node.data.description || ""}
+                onChange={(e) => updateData("description", e.target.value)}
+                placeholder="What this agent does..."
+                className="min-h-[80px] resize-none border-white/10 bg-white/5 text-sm"
+              />
+            </div>
+          </>
+        )
+
+      case "systemPrompt":
+        return (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">System Instructions</Label>
+            <Textarea
+              value={node.data.content || ""}
+              onChange={(e) => updateData("content", e.target.value)}
+              placeholder="You are a helpful AI assistant..."
+              className="min-h-[150px] resize-none border-white/10 bg-white/5 text-sm"
+            />
+          </div>
+        )
+
+      case "toolsConfig":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-sm">Code Interpreter</span>
+              <input
+                type="checkbox"
+                checked={node.data.enableCodeInterpreter}
+                onChange={(e) => updateData("enableCodeInterpreter", e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600"
+              />
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-sm">Web Search</span>
+              <input
+                type="checkbox"
+                checked={node.data.enableWebSearch}
+                onChange={(e) => updateData("enableWebSearch", e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600"
+              />
+            </div>
+          </div>
+        )
+
       default:
         return <p className="text-sm text-muted-foreground">No configurable properties for this node type.</p>
     }
@@ -304,6 +422,18 @@ export function NodePropertiesPanel({ node, onClose, onUpdateNodeData }: NodePro
             <p className="text-xs text-amber-400">Minimum 1 character required before you can run this tile.</p>
           </div>
         )}
+
+        {/* Footer Actions */}
+        <div className="border-t border-white/5 p-4">
+          <Button
+            variant="destructive"
+            className="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all gap-2"
+            onClick={() => onDeleteNode?.(node.id)}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Component
+          </Button>
+        </div>
       </div>
     </div>
   )

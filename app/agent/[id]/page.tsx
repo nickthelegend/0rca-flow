@@ -32,6 +32,7 @@ import { NodePropertiesPanel } from "@/components/node-properties-panel"
 import { AIChatbot } from "@/components/ai-chatbot"
 import { useParams, useRouter } from "next/navigation"
 import { usePrivyWallet } from "@/hooks/use-privy-wallet"
+import { supabase } from "@/lib/supabase"
 
 // Agent-specific node components
 import { AgentCoreNode } from "@/components/nodes/agent-core-node"
@@ -45,13 +46,13 @@ import { AgentAddNodePopover } from "@/components/agent-add-node-popover"
 import { AgentTestPanel } from "@/components/agent-test-panel"
 
 const nodeTypes: NodeTypes = {
-  agentCore: AgentCoreNode,
-  systemPrompt: SystemPromptNode,
-  toolsConfig: ToolsConfigNode,
-  memory: MemoryNode,
-  knowledgeBase: KnowledgeBaseNode,
-  guardrails: GuardrailsNode,
-  outputParser: OutputParserNode,
+  agentCore: AgentCoreNode as any,
+  systemPrompt: SystemPromptNode as any,
+  toolsConfig: ToolsConfigNode as any,
+  memory: MemoryNode as any,
+  knowledgeBase: KnowledgeBaseNode as any,
+  guardrails: GuardrailsNode as any,
+  outputParser: OutputParserNode as any,
 }
 
 const defaultEdgeOptions = {
@@ -69,7 +70,7 @@ const defaultEdgeOptions = {
   },
 }
 
-const getDefaultNodeData = (type: string) => {
+const getDefaultNodeData = (type: string): Record<string, any> => {
   switch (type) {
     case "agentCore":
       return { name: "AI Agent", model: "openai/gpt-5", description: "An intelligent AI agent" }
@@ -90,47 +91,28 @@ const getDefaultNodeData = (type: string) => {
   }
 }
 
+const initialNodesList: Node[] = [
+  {
+    id: "1",
+    type: "agentCore",
+    position: { x: 400, y: 200 },
+    data: { name: "AI Agent", model: "openai/gpt-5", description: "An intelligent AI agent" },
+  },
+]
+
 function AgentBuilderInner() {
   const params = useParams()
   const router = useRouter()
-  const { disconnect } = usePrivyWallet()
+  const { disconnect, walletAddress } = usePrivyWallet()
   const agentId = params.id as string
 
-  const loadAgent = useCallback(() => {
-    if (typeof window === "undefined") return null
-    const stored = localStorage.getItem(`agent-${agentId}`)
-    if (stored) {
-      return JSON.parse(stored)
-    }
-    const simpleData = localStorage.getItem(agentId)
-    if (simpleData) {
-      return JSON.parse(simpleData)
-    }
-    return null
-  }, [agentId])
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [edges, setEdges] = useState<Edge[]>([])
+  const [agentName, setAgentName] = useState("Untitled Agent")
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-  const savedAgent = loadAgent()
-
-  const nodeIdCounter = useRef(1)
-  const nodesRef = useRef<Node[]>([])
-  const edgesRef = useRef<Edge[]>([])
-
-  const getInitialNodes = useCallback(() => {
-    if (savedAgent?.nodes) return savedAgent.nodes
-    return [
-      {
-        id: "1",
-        type: "agentCore",
-        position: { x: 400, y: 200 },
-        data: { name: "AI Agent", model: "openai/gpt-5", description: "An intelligent AI agent" },
-      },
-    ]
-  }, [savedAgent])
-
-  const [nodes, setNodes] = useState<Node[]>(getInitialNodes)
-  const [edges, setEdges] = useState<Edge[]>(savedAgent?.edges || [])
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
-  const [agentName, setAgentName] = useState(savedAgent?.name || "Untitled Agent")
   const [isEditingName, setIsEditingName] = useState(false)
   const [activeTool, setActiveTool] = useState<"select" | "pan">("select")
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
@@ -142,12 +124,45 @@ function AgentBuilderInner() {
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
-  const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null)
 
   const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([
-    { nodes: getInitialNodes(), edges: savedAgent?.edges || [] },
+    { nodes: initialNodesList, edges: [] },
   ])
   const [historyIndex, setHistoryIndex] = useState(0)
+
+  const nodeIdCounter = useRef(1)
+  const nodesRef = useRef<Node[]>([])
+  const edgesRef = useRef<Edge[]>([])
+  const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null)
+
+  // Load Agent
+  useEffect(() => {
+    const fetchAgent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("agent_workflows")
+          .select("*")
+          .eq("id", agentId)
+          .single()
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Error loading agent:", error)
+          return
+        }
+
+        if (data) {
+          setNodes(data.nodes || initialNodesList)
+          setEdges(data.edges || [])
+          setAgentName(data.name || "Untitled Agent")
+        } else {
+          setNodes(initialNodesList)
+        }
+      } catch (e) {
+        console.error("Failed to fetch agent", e)
+      }
+    }
+    fetchAgent()
+  }, [agentId])
 
   const { zoomIn, zoomOut, fitView } = useReactFlow()
 
@@ -166,24 +181,50 @@ function AgentBuilderInner() {
   }, [reactFlowInstance])
 
   useEffect(() => {
-    const maxId = Math.max(...nodes.map((n) => Number.parseInt(n.id) || 0), 0)
-    nodeIdCounter.current = maxId + 1
-  }, [])
-
-  // Auto-save agent
-  useEffect(() => {
-    if (typeof window === "undefined") return
     if (nodes.length > 0) {
-      const agentData = {
-        id: agentId,
-        name: agentName,
-        nodes,
-        edges,
-        updatedAt: new Date().toISOString(),
-      }
-      localStorage.setItem(`agent-${agentId}`, JSON.stringify(agentData))
+      const maxId = Math.max(...nodes.map((n) => Number.parseInt(n.id) || 0), 0)
+      nodeIdCounter.current = Math.max(nodeIdCounter.current, maxId + 1)
     }
-  }, [nodes, edges, agentName, agentId])
+  }, [nodes])
+
+  // Save Agent
+  const handleSave = useCallback(async () => {
+    if (!agentId) return
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from("agent_workflows")
+        .upsert({
+          id: agentId,
+          name: agentName,
+          nodes,
+          edges,
+          wallet_address: walletAddress,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (error) throw error
+      setLastSaved(new Date())
+      console.log("[0rca] Agent saved successfully")
+    } catch (error) {
+      console.error("Error saving agent:", error)
+    } finally {
+      setIsSaving(false)
+    }
+  }, [nodes, edges, agentName, agentId, walletAddress])
+
+  // Auto-save disabled as requested
+  /*
+  useEffect(() => {
+    const saveTimeout = setTimeout(() => {
+      if (nodes.length > 0) {
+        handleSave()
+      }
+    }, 5000)
+
+    return () => clearTimeout(saveTimeout)
+  }, [nodes, edges, agentName, handleSave])
+  */
 
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
@@ -221,7 +262,16 @@ function AgentBuilderInner() {
           }
         }
       } else if (contextMenuPos && rfInstance) {
-        position = rfInstance.screenToFlowPosition(contextMenuPos)
+        // Safe conversion of screen coordinates to flow coordinates
+        try {
+          position = rfInstance.screenToFlowPosition({
+            x: contextMenuPos.x,
+            y: contextMenuPos.y,
+          })
+        } catch (e) {
+          console.error("Failed to convert position:", e)
+          position = { x: Math.random() * 400 + 100, y: Math.random() * 400 + 100 }
+        }
       } else if (rfInstance) {
         const { x, y, zoom } = rfInstance.getViewport()
         position = {
@@ -240,7 +290,7 @@ function AgentBuilderInner() {
       }
 
       const newNodes = [...currentNodes, newNode]
-      let newEdges = currentEdges
+      let newEdges = [...currentEdges]
 
       if (sourceNodeId) {
         const newEdge: Edge = {
@@ -252,16 +302,21 @@ function AgentBuilderInner() {
           style: { stroke: "#10b981", strokeWidth: 2 },
           markerEnd: { type: MarkerType.ArrowClosed, color: "#10b981" },
         }
-        newEdges = [...currentEdges, newEdge]
+        newEdges.push(newEdge)
       }
 
       setNodes(newNodes)
       setEdges(newEdges)
-      pushHistory(newNodes, newEdges)
+      setHistory((prev) => {
+        const newHistory = prev.slice(0, historyIndex + 1)
+        newHistory.push({ nodes: newNodes, edges: newEdges })
+        return newHistory
+      })
+      setHistoryIndex((prev) => prev + 1)
       setShowAddNodePopover(false)
       setContextMenuPos(null)
     },
-    [contextMenuPos, pushHistory],
+    [contextMenuPos, historyIndex],
   )
 
   const onNodesChange: OnNodesChange = useCallback(
@@ -280,12 +335,34 @@ function AgentBuilderInner() {
     [nodes],
   )
 
+  const onNodesDelete = useCallback(
+    (deletedNodes: Node[]) => {
+      const deletedIds = new Set(deletedNodes.map((n) => n.id))
+      setEdges((currentEdges) => {
+        const newEdges = currentEdges.filter((edge) => !deletedIds.has(edge.source) && !deletedIds.has(edge.target))
+        setHistory((prev) => {
+          const newHistory = prev.slice(0, historyIndex + 1)
+          const currentNodes = nodesRef.current.filter((n) => !deletedIds.has(n.id))
+          newHistory.push({ nodes: currentNodes, edges: newEdges })
+          return newHistory
+        })
+        setHistoryIndex((prev) => prev + 1)
+        return newEdges
+      })
+    },
+    [historyIndex],
+  )
+
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
       const newEdges = applyEdgeChanges(changes, edges)
       setEdges(newEdges)
+
+      if (changes.some(c => c.type === 'remove')) {
+        pushHistory(nodes, newEdges)
+      }
     },
-    [edges],
+    [nodes, edges, pushHistory],
   )
 
   const onConnect: OnConnect = useCallback(
@@ -324,10 +401,6 @@ function AgentBuilderInner() {
     }
   }, [history, historyIndex])
 
-  const handleSave = useCallback(() => {
-    console.log("[v0] Agent saved")
-  }, [])
-
   const handlePlay = useCallback(() => {
     setShowTestPanel(true)
   }, [])
@@ -338,9 +411,64 @@ function AgentBuilderInner() {
     pushHistory(newNodes, edges)
   }
 
-  const handlePaneContextMenu = useCallback((event: React.MouseEvent) => {
+  const onDeleteNode = useCallback(
+    (nodeId: string) => {
+      setNodes((currentNodes) => {
+        const newNodes = currentNodes.filter((node) => node.id !== nodeId)
+        setEdges((currentEdges) => {
+          const newEdges = currentEdges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+          setHistory((prev) => {
+            const newHistory = prev.slice(0, historyIndex + 1)
+            newHistory.push({ nodes: newNodes, edges: newEdges })
+            return newHistory
+          })
+          setHistoryIndex((prev) => prev + 1)
+          return newEdges
+        })
+        return newNodes
+      })
+
+      if (selectedNodeId === nodeId) {
+        setSelectedNodeId(null)
+        setShowPropertiesPanel(false)
+      }
+    },
+    [selectedNodeId, historyIndex],
+  )
+
+  const onDuplicateNode = useCallback(
+    (nodeId: string) => {
+      const nodeToDuplicate = nodesRef.current.find((node) => node.id === nodeId)
+      if (nodeToDuplicate) {
+        const newNodeId = `${nodeIdCounter.current++}`
+        const newNode: Node = {
+          ...nodeToDuplicate,
+          id: newNodeId,
+          position: {
+            x: nodeToDuplicate.position.x + 50,
+            y: nodeToDuplicate.position.y + 50,
+          },
+          selected: false,
+        }
+        const newNodes = [...nodesRef.current, newNode]
+        const newEdges = edgesRef.current
+        setNodes(newNodes)
+        setHistory((prev) => {
+          const newHistory = prev.slice(0, historyIndex + 1)
+          newHistory.push({ nodes: newNodes, edges: newEdges })
+          return newHistory
+        })
+        setHistoryIndex((prev) => prev + 1)
+      }
+    },
+    [historyIndex],
+  )
+
+  const handlePaneContextMenu = useCallback((event: React.MouseEvent | MouseEvent) => {
     event.preventDefault()
-    setContextMenuPos({ x: event.clientX, y: event.clientY })
+    if ("clientX" in event) {
+      setContextMenuPos({ x: event.clientX, y: event.clientY })
+    }
     setShowAddNodePopover(true)
   }, [])
 
@@ -405,9 +533,15 @@ function AgentBuilderInner() {
               <MessageSquare className="w-4 h-4 mr-2" />
               Test Agent
             </Button>
-            <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
-              <Cloud className="w-4 h-4 mr-2" />
-              Synced
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              <Cloud className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`} />
+              {isSaving ? "Saving..." : "Save Agent"}
             </Button>
             <ShareDropdown
               onPublish={(visibility) => {
@@ -441,8 +575,9 @@ function AgentBuilderInner() {
       {/* Properties Panel */}
       {showPropertiesPanel && selectedNode && (
         <NodePropertiesPanel
-          node={selectedNode}
+          node={selectedNode as any}
           onUpdateNodeData={onUpdateNodeData}
+          onDeleteNode={onDeleteNode}
           onClose={() => {
             setShowPropertiesPanel(false)
             setSelectedNodeId(null)
@@ -453,11 +588,20 @@ function AgentBuilderInner() {
       {/* Main Canvas */}
       <div ref={reactFlowWrapper} className="h-full w-full pt-16">
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              onDeleteNode,
+              onAddNode,
+              onDuplicateNode,
+            },
+          }))}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodesDelete={onNodesDelete}
           onInit={setReactFlowInstance}
           nodeTypes={nodeTypes}
           defaultEdgeOptions={defaultEdgeOptions}

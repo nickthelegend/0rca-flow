@@ -140,7 +140,7 @@ CREATE TABLE public.user_notification_reads (
 );
 
 CREATE TABLE public.workflows (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  id text NOT NULL,
   wallet_address text,
   name character varying NOT NULL,
   description text,
@@ -151,4 +151,20 @@ CREATE TABLE public.workflows (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT workflows_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.agent_workflows (
+  id text NOT NULL,
+  wallet_address text,
+  name character varying NOT NULL,
+  description text,
+  category text,
+  model text,
+  system_prompt text,
+  tools jsonb DEFAULT '[]'::jsonb,
+  nodes jsonb DEFAULT '[]'::jsonb,
+  edges jsonb DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT agent_workflows_pkey PRIMARY KEY (id)
 );

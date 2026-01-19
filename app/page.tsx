@@ -25,6 +25,7 @@ import { CreateWorkflowModal } from "@/components/create-workflow-modal"
 import { CreateAgentModal } from "@/components/create-agent-modal"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
+import { supabase } from "@/lib/supabase"
 
 interface WorkflowType {
   id: string
@@ -61,36 +62,35 @@ export default function HomePage() {
 
 
   useEffect(() => {
-    if (!isWalletConnected) return
+    if (!isWalletConnected || !walletAddress) return
 
-    const loadData = () => {
-      const allWorkflows: WorkflowType[] = []
-      const allAgents: AgentType[] = []
+    const loadData = async () => {
+      try {
+        const { data: wfData, error: wfError } = await supabase
+          .from("workflows")
+          .select("*")
+          .eq("wallet_address", walletAddress)
+          .order("updated_at", { ascending: false })
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key?.startsWith("workflow-")) {
-          const data = localStorage.getItem(key)
-          if (data) {
-            allWorkflows.push(JSON.parse(data))
-          }
-        } else if (key?.startsWith("agent-")) {
-          const data = localStorage.getItem(key)
-          if (data) {
-            allAgents.push(JSON.parse(data))
-          }
-        }
+        if (wfError) throw wfError
+
+        const { data: agData, error: agError } = await supabase
+          .from("agent_workflows")
+          .select("*")
+          .eq("wallet_address", walletAddress)
+          .order("updated_at", { ascending: false })
+
+        if (agError) throw agError
+
+        setWorkflows(wfData || [])
+        setAgents(agData || [])
+      } catch (error) {
+        console.error("Error loading dashboard data:", error)
       }
-
-      allWorkflows.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      allAgents.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-
-      setWorkflows(allWorkflows)
-      setAgents(allAgents)
     }
 
     loadData()
-  }, [isWalletConnected])
+  }, [isWalletConnected, walletAddress])
 
   const connectWallet = () => {
     connect();

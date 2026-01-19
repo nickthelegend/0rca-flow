@@ -4,21 +4,20 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Play, ChevronRight, MoreVertical, Copy, Trash2, GripVertical } from "lucide-react"
 
-
-
 type NodeControlsProps = {
   nodeId: string
   nodeName: string
   nodeDescription: string
-  nodeIcon: React.ReactNode
-  nodeColor: string
+  nodeIcon?: React.ReactNode
+  nodeColor?: string
   selected?: boolean
-  isHovered: boolean
+  isHovered?: boolean
   hasOutgoingConnection?: boolean
   onAddNode?: (type: string, sourceNodeId: string) => void
   onDeleteNode?: (nodeId: string) => void
   onDuplicateNode?: (nodeId: string) => void
   onCopyNode?: (nodeId: string) => void
+  children: React.ReactNode
 }
 
 export function NodeControls({
@@ -26,16 +25,18 @@ export function NodeControls({
   nodeName,
   nodeDescription,
   nodeIcon,
-  nodeColor,
+  nodeColor = "bg-primary",
   selected,
-  isHovered,
-  hasOutgoingConnection,
-  onAddNode,
+  isHovered: externalIsHovered,
   onDeleteNode,
   onDuplicateNode,
   onCopyNode,
+  children,
 }: NodeControlsProps) {
   const [showContextMenu, setShowContextMenu] = useState(false)
+  const [internalIsHovered, setInternalIsHovered] = useState(false)
+
+  const isHovered = externalIsHovered ?? internalIsHovered
 
   // Close on escape
   useEffect(() => {
@@ -49,7 +50,11 @@ export function NodeControls({
   }, [])
 
   return (
-    <>
+    <div
+      className="relative"
+      onMouseEnter={() => setInternalIsHovered(true)}
+      onMouseLeave={() => setInternalIsHovered(false)}
+    >
       {/* Floating Toolbar */}
       {selected && (
         <div className="absolute -top-12 left-1/2 z-50 -translate-x-1/2 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
@@ -123,7 +128,9 @@ export function NodeControls({
       {isHovered && !selected && (
         <div className="absolute -top-14 left-1/2 z-40 -translate-x-1/2 animate-in fade-in-0 duration-150 pointer-events-none">
           <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#1a1a25]/95 px-3 py-2 shadow-lg backdrop-blur-xl whitespace-nowrap">
-            <div className={`flex h-6 w-6 items-center justify-center rounded ${nodeColor}`}>{nodeIcon}</div>
+            {nodeIcon && (
+              <div className={`flex h-6 w-6 items-center justify-center rounded ${nodeColor}`}>{nodeIcon}</div>
+            )}
             <div>
               <p className="text-xs font-medium text-foreground">{nodeName}</p>
               <p className="text-[10px] text-muted-foreground">{nodeDescription}</p>
@@ -132,9 +139,7 @@ export function NodeControls({
         </div>
       )}
 
-
-
-
-    </>
+      {children}
+    </div>
   )
 }

@@ -12,7 +12,7 @@ interface ToolsConfigNodeData {
 }
 
 export function ToolsConfigNode({ data, selected, id }: NodeProps) {
-  const nodeData = data as ToolsConfigNodeData
+  const nodeData = data as any
 
   const activeTools = [
     ...(nodeData.enableWebSearch ? ["Web Search"] : []),
@@ -21,11 +21,17 @@ export function ToolsConfigNode({ data, selected, id }: NodeProps) {
   ]
 
   return (
-    <NodeControls nodeId={id} nodeName="Tools Config" nodeDescription="Configure tools and capabilities for your agent">
+    <NodeControls
+      nodeId={id}
+      nodeName="Tools Config"
+      nodeDescription="Configure tools and capabilities for your agent"
+      selected={selected}
+      onDeleteNode={nodeData.onDeleteNode}
+      onDuplicateNode={nodeData.onDuplicateNode}
+    >
       <div
-        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[260px] ${
-          selected ? "border-orange-500 shadow-lg shadow-orange-500/20" : "border-white/10 hover:border-white/20"
-        }`}
+        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[260px] ${selected ? "border-orange-500 shadow-lg shadow-orange-500/20" : "border-white/10 hover:border-white/20"
+          }`}
       >
         <Handle
           type="target"

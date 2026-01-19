@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { X, ArrowRight, ArrowLeft, Sparkles } from "lucide-react"
+import { usePrivyWallet } from "@/hooks/use-privy-wallet"
+import { supabase } from "@/lib/supabase"
 
 const categories = [
   { name: "Data Processing", icon: "🔄", description: "Transform and process data" },
@@ -19,33 +21,44 @@ interface CreateWorkflowModalProps {
 }
 
 export function CreateWorkflowModal({ onClose, onCreate }: CreateWorkflowModalProps) {
+  const { walletAddress } = usePrivyWallet()
   const [step, setStep] = useState(1)
   const [workflowName, setWorkflowName] = useState("")
   const [workflowDescription, setWorkflowDescription] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    setIsCreating(true)
     const workflowId = `workflow-${Date.now()}`
-    const workflowData = {
-      id: workflowId,
-      name: workflowName || "Untitled Workflow",
-      description: workflowDescription,
-      category: selectedCategory,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      nodes: [
-        {
-          id: "1",
-          type: "start",
-          position: { x: 50, y: 250 },
-          data: {},
-        },
-      ],
-      edges: [],
-    }
 
-    localStorage.setItem(workflowId, JSON.stringify(workflowData))
-    onCreate(workflowId)
+    try {
+      const { error } = await supabase
+        .from("workflows")
+        .insert({
+          id: workflowId,
+          name: workflowName || "Untitled Workflow",
+          description: workflowDescription,
+          category: selectedCategory,
+          wallet_address: walletAddress,
+          nodes: [
+            {
+              id: "1",
+              type: "start",
+              position: { x: 50, y: 250 },
+              data: {},
+            },
+          ],
+          edges: [],
+        })
+
+      if (error) throw error
+      onCreate(workflowId)
+    } catch (error) {
+      console.error("Error creating workflow:", error)
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -127,11 +140,10 @@ export function CreateWorkflowModal({ onClose, onCreate }: CreateWorkflowModalPr
                       <button
                         key={category.name}
                         onClick={() => setSelectedCategory(category.name)}
-                        className={`p-6 rounded-2xl border-2 text-left transition-all ${
-                          selectedCategory === category.name
+                        className={`p-6 rounded-2xl border-2 text-left transition-all ${selectedCategory === category.name
                             ? "border-violet-500 bg-violet-500/10"
                             : "border-white/10 bg-white/5 hover:bg-white/10"
-                        }`}
+                          }`}
                       >
                         <div className="text-3xl mb-3">{category.icon}</div>
                         <div className="text-white font-medium mb-1">{category.name}</div>
@@ -167,10 +179,10 @@ export function CreateWorkflowModal({ onClose, onCreate }: CreateWorkflowModalPr
             ) : (
               <Button
                 onClick={handleCreate}
-                disabled={!selectedCategory}
+                disabled={!selectedCategory || isCreating}
                 className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Workflow
+                {isCreating ? "Creating..." : "Create Workflow"}
                 <Sparkles className="w-4 h-4 ml-2" />
               </Button>
             )}

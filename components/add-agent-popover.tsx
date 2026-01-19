@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 import { Search, Bot, X, Sparkles } from "lucide-react"
 import Image from "next/image"
+import { usePrivyWallet } from "@/hooks/use-privy-wallet"
+import { supabase } from "@/lib/supabase"
 
 interface Agent {
   id: string
@@ -20,26 +22,30 @@ type AddAgentPopoverProps = {
 }
 
 export function AddAgentPopover({ isOpen, onClose, onAddAgent }: AddAgentPopoverProps) {
+  const { walletAddress } = usePrivyWallet()
   const [searchQuery, setSearchQuery] = useState("")
   const [agents, setAgents] = useState<Agent[]>([])
   const popoverRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (isOpen && typeof window !== "undefined") {
-      // Load agents from localStorage
-      const loadedAgents: Agent[] = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key?.startsWith("agent-")) {
-          const data = localStorage.getItem(key)
-          if (data) {
-            loadedAgents.push(JSON.parse(data))
-          }
+    if (isOpen && walletAddress) {
+      const fetchAgents = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("agent_workflows")
+            .select("*")
+            .eq("wallet_address", walletAddress)
+            .order("updated_at", { ascending: false })
+
+          if (error) throw error
+          setAgents(data || [])
+        } catch (error) {
+          console.error("Error loading agents for popover:", error)
         }
       }
-      setAgents(loadedAgents)
+      fetchAgents()
     }
-  }, [isOpen])
+  }, [isOpen, walletAddress])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

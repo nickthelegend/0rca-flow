@@ -12,14 +12,20 @@ interface MemoryNodeData {
 }
 
 export function MemoryNode({ data, selected, id }: NodeProps) {
-  const nodeData = data as MemoryNodeData
+  const nodeData = data as any
 
   return (
-    <NodeControls nodeId={id} nodeName="Memory" nodeDescription="Manage conversation history and context">
+    <NodeControls
+      nodeId={id}
+      nodeName="Memory"
+      nodeDescription="Manage conversation history and context"
+      selected={selected}
+      onDeleteNode={nodeData.onDeleteNode}
+      onDuplicateNode={nodeData.onDuplicateNode}
+    >
       <div
-        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[260px] ${
-          selected ? "border-purple-500 shadow-lg shadow-purple-500/20" : "border-white/10 hover:border-white/20"
-        }`}
+        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[260px] ${selected ? "border-purple-500 shadow-lg shadow-purple-500/20" : "border-white/10 hover:border-white/20"
+          }`}
       >
         <Handle
           type="target"

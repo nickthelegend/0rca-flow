@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { X, ArrowRight, ArrowLeft, Bot, Sparkles, Brain, FileText, Users, Zap, Check } from "lucide-react"
+import { usePrivyWallet } from "@/hooks/use-privy-wallet"
+import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -64,6 +66,7 @@ const agentTools = [
 ]
 
 export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
+  const { walletAddress } = usePrivyWallet()
   const [step, setStep] = useState(1)
   const [agentName, setAgentName] = useState("")
   const [agentDescription, setAgentDescription] = useState("")
@@ -71,23 +74,42 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
   const [selectedModel, setSelectedModel] = useState<string>("openai/gpt-5")
   const [selectedTools, setSelectedTools] = useState<string[]>([])
   const [systemPrompt, setSystemPrompt] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    setIsCreating(true)
     const agentId = `agent-${Date.now()}`
-    const agentData = {
-      id: agentId,
-      name: agentName || "Untitled Agent",
-      description: agentDescription,
-      category: selectedCategory,
-      model: selectedModel,
-      tools: selectedTools,
-      systemPrompt,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
 
-    localStorage.setItem(agentId, JSON.stringify(agentData))
-    onCreate(agentId)
+    try {
+      const { error } = await supabase
+        .from("agent_workflows")
+        .insert({
+          id: agentId,
+          wallet_address: walletAddress,
+          name: agentName || "Untitled Agent",
+          description: agentDescription,
+          category: selectedCategory,
+          model: selectedModel,
+          system_prompt: systemPrompt,
+          tools: selectedTools,
+          nodes: [
+            {
+              id: "1",
+              type: "agentCore",
+              position: { x: 400, y: 200 },
+              data: { name: agentName || "AI Agent", model: selectedModel, description: agentDescription },
+            },
+          ],
+          edges: [],
+        })
+
+      if (error) throw error
+      onCreate(agentId)
+    } catch (error) {
+      console.error("Error creating agent:", error)
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const toggleTool = (toolId: string) => {
@@ -123,9 +145,8 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
             {[1, 2, 3].map((s) => (
               <div
                 key={s}
-                className={`h-1 flex-1 rounded-full transition-all ${
-                  s <= step ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-white/10"
-                }`}
+                className={`h-1 flex-1 rounded-full transition-all ${s <= step ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-white/10"
+                  }`}
               />
             ))}
           </div>
@@ -162,11 +183,10 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
                       <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`p-4 rounded-xl border text-left transition-all ${
-                          selectedCategory === cat.id
-                            ? "border-emerald-500 bg-emerald-500/10"
-                            : "border-white/10 bg-white/5 hover:bg-white/10"
-                        }`}
+                        className={`p-4 rounded-xl border text-left transition-all ${selectedCategory === cat.id
+                          ? "border-emerald-500 bg-emerald-500/10"
+                          : "border-white/10 bg-white/5 hover:bg-white/10"
+                          }`}
                       >
                         <div
                           className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center mb-3`}
@@ -192,11 +212,10 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
                     <button
                       key={model.id}
                       onClick={() => setSelectedModel(model.id)}
-                      className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
-                        selectedModel === model.id
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
-                      }`}
+                      className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between ${selectedModel === model.id
+                        ? "border-emerald-500 bg-emerald-500/10"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                        }`}
                     >
                       <div>
                         <h4 className="font-medium text-white">{model.name}</h4>
@@ -220,11 +239,10 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
                     <button
                       key={tool.id}
                       onClick={() => toggleTool(tool.id)}
-                      className={`p-3 rounded-xl border text-left transition-all ${
-                        selectedTools.includes(tool.id)
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
-                      }`}
+                      className={`p-3 rounded-xl border text-left transition-all ${selectedTools.includes(tool.id)
+                        ? "border-emerald-500 bg-emerald-500/10"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                        }`}
                     >
                       <h4 className="font-medium text-white text-sm">{tool.name}</h4>
                       <p className="text-xs text-white/50">{tool.description}</p>
@@ -298,10 +316,11 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
           ) : (
             <Button
               onClick={handleCreate}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+              disabled={isCreating}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Create Agent
+              {isCreating ? "Creating..." : "Create Agent"}
             </Button>
           )}
         </div>

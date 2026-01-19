@@ -59,19 +59,19 @@ import { generateAISDKCode } from "@/lib/code-generator"
 import { DeploymentConfigDialog, type DeploymentConfig } from "@/components/deployment-config-dialog"
 
 const nodeTypes: NodeTypes = {
-  textModel: TextModelNode,
-  embeddingModel: EmbeddingModelNode,
-  tool: ToolNode,
-  structuredOutput: StructuredOutputNode,
-  prompt: PromptNode,
-  imageGeneration: ImageGenerationNode,
-  audio: AudioNode,
-  javascript: JavaScriptNode,
-  start: StartNode,
-  end: EndNode,
-  conditional: ConditionalNode,
-  httpRequest: HttpRequestNode,
-  agent: AgentNode,
+  textModel: TextModelNode as any,
+  embeddingModel: EmbeddingModelNode as any,
+  tool: ToolNode as any,
+  structuredOutput: StructuredOutputNode as any,
+  prompt: PromptNode as any,
+  imageGeneration: ImageGenerationNode as any,
+  audio: AudioNode as any,
+  javascript: JavaScriptNode as any,
+  start: StartNode as any,
+  end: EndNode as any,
+  conditional: ConditionalNode as any,
+  httpRequest: HttpRequestNode as any,
+  agent: AgentNode as any,
 }
 
 const initialNodes: Node[] = [
@@ -100,7 +100,7 @@ const defaultEdgeOptions = {
   },
 }
 
-const getDefaultNodeData = (type: string) => {
+const getDefaultNodeData = (type: string): Record<string, any> => {
   switch (type) {
     case "textModel":
       return { model: "openai/gpt-5", temperature: 0.7, maxTokens: 2000 }
@@ -128,6 +128,7 @@ const getDefaultNodeData = (type: string) => {
       return { url: "https://api.example.com", method: "GET" }
     case "agent":
       return { name: "AI Agent", description: "An autonomous AI agent", model: "openai/gpt-5" }
+    default:
       return {}
   }
 }
@@ -194,7 +195,7 @@ const demoPlans = [
 function WorkflowBuilderInner() {
   const params = useParams()
   const router = useRouter()
-  const { disconnect } = usePrivyWallet()
+  const { disconnect, walletAddress } = usePrivyWallet()
   const workflowId = params.id as string
 
   const [nodes, setNodes] = useState<Node[]>(initialNodes)
@@ -260,39 +261,50 @@ function WorkflowBuilderInner() {
     fetchWorkflow()
   }, [workflowId])
 
-  // Save Workflow Debounced
-  useEffect(() => {
-    const saveTimeout = setTimeout(async () => {
-      if (nodes.length === 0) return
-      setIsSaving(true)
-      try {
-        const { error } = await supabase
-          .from("workflows")
-          .upsert({
-            id: workflowId,
-            name: workflowName,
-            nodes,
-            edges,
-            updated_at: new Date().toISOString(),
-          })
+  // Save Workflow
+  const handleSave = useCallback(async () => {
+    if (!workflowId) return
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from("workflows")
+        .upsert({
+          id: workflowId,
+          name: workflowName,
+          nodes,
+          edges,
+          wallet_address: walletAddress,
+          updated_at: new Date().toISOString(),
+        })
 
-        if (error) throw error
-        setLastSaved(new Date())
-      } catch (error) {
-        console.error("Error saving workflow:", error)
-      } finally {
-        setIsSaving(false)
+      if (error) throw error
+      setLastSaved(new Date())
+      console.log("[0rca] Workflow saved successfully")
+    } catch (error) {
+      console.error("Error saving workflow:", error)
+    } finally {
+      setIsSaving(false)
+    }
+  }, [nodes, edges, workflowName, workflowId, walletAddress])
+
+  // Auto-save Workflow Debounced
+  useEffect(() => {
+    const saveTimeout = setTimeout(() => {
+      if (nodes.length > 0) {
+        handleSave()
       }
-    }, 2000) // 2 second debounce
+    }, 5000) // 5 second debounce for background autosave
 
     return () => clearTimeout(saveTimeout)
-  }, [nodes, edges, workflowName, workflowId])
+  }, [nodes, edges, workflowName, handleSave])
 
 
   useEffect(() => {
-    const maxId = Math.max(...nodes.map((n) => Number.parseInt(n.id) || 0), 0)
-    nodeIdCounter.current = maxId + 1
-  }, [])
+    if (nodes.length > 0) {
+      const maxId = Math.max(...nodes.map((n) => Number.parseInt(n.id) || 0), 0)
+      nodeIdCounter.current = Math.max(nodeIdCounter.current, maxId + 1)
+    }
+  }, [nodes])
 
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
@@ -327,6 +339,24 @@ function WorkflowBuilderInner() {
       }
     },
     [nodes],
+  )
+
+  const onNodesDelete = useCallback(
+    (deletedNodes: Node[]) => {
+      const deletedIds = new Set(deletedNodes.map((n) => n.id))
+      setEdges((currentEdges) => {
+        const newEdges = currentEdges.filter((edge) => !deletedIds.has(edge.source) && !deletedIds.has(edge.target))
+        setHistory((prev) => {
+          const newHistory = prev.slice(0, historyIndex + 1)
+          const currentNodes = nodes.filter((n) => !deletedIds.has(n.id))
+          newHistory.push({ nodes: currentNodes, edges: newEdges })
+          return newHistory
+        })
+        setHistoryIndex((prev) => prev + 1)
+        return newEdges
+      })
+    },
+    [nodes, historyIndex],
   )
 
   const onEdgesChange: OnEdgesChange = useCallback(
@@ -459,11 +489,6 @@ function WorkflowBuilderInner() {
       setHistoryIndex(newIndex)
     }
   }, [history, historyIndex])
-
-  const handleSave = useCallback(() => {
-    // Already auto-saving
-    console.log("[0rca] Workflow saved")
-  }, [])
 
   const handlePlay = useCallback(() => {
     setShowPricing(true)
@@ -640,17 +665,30 @@ serve({
     pushHistory(newNodes, edges)
   }
 
-  const onDeleteNode = (nodeId: string) => {
-    const newNodes = nodes.filter((node) => node.id !== nodeId)
-    const newEdges = edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-    setNodes(newNodes)
-    setEdges(newEdges)
-    pushHistory(newNodes, newEdges)
-    if (selectedNodeId === nodeId) {
-      setSelectedNodeId(null)
-      setShowPropertiesPanel(false)
-    }
-  }
+  const onDeleteNode = useCallback(
+    (nodeId: string) => {
+      setNodes((currentNodes) => {
+        const newNodes = currentNodes.filter((node) => node.id !== nodeId)
+        setEdges((currentEdges) => {
+          const newEdges = currentEdges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+          setHistory((prev) => {
+            const newHistory = prev.slice(0, historyIndex + 1)
+            newHistory.push({ nodes: newNodes, edges: newEdges })
+            return newHistory
+          })
+          setHistoryIndex((prev) => prev + 1)
+          return newEdges
+        })
+        return newNodes
+      })
+
+      if (selectedNodeId === nodeId) {
+        setSelectedNodeId(null)
+        setShowPropertiesPanel(false)
+      }
+    },
+    [selectedNodeId, historyIndex],
+  )
 
   const onDuplicateNode = (nodeId: string) => {
     const nodeToDuplicate = nodes.find((node) => node.id === nodeId)
@@ -669,9 +707,11 @@ serve({
     }
   }
 
-  const handlePaneContextMenu = useCallback((event: React.MouseEvent) => {
+  const handlePaneContextMenu = useCallback((event: React.MouseEvent | MouseEvent) => {
     event.preventDefault()
-    setContextMenuPos({ x: event.clientX, y: event.clientY })
+    if ("clientX" in event) {
+      setContextMenuPos({ x: event.clientX, y: event.clientY })
+    }
     setShowAddNodePopover(true)
   }, [])
 
@@ -735,9 +775,15 @@ serve({
               <Bot className="w-4 h-4 mr-2" />
               Add Agents
             </Button>
-            <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
-              <Cloud className="w-4 h-4 mr-2" />
-              Synced
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              <Cloud className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`} />
+              {isSaving ? "Saving..." : "Save Workflow"}
             </Button>
             <ShareDropdown
               onPublish={(visibility) => {
@@ -772,8 +818,9 @@ serve({
       {/* Properties Panel */}
       {showPropertiesPanel && selectedNode && (
         <NodePropertiesPanel
-          node={selectedNode}
+          node={selectedNode as any}
           onUpdateNodeData={onUpdateNodeData}
+          onDeleteNode={onDeleteNode}
           onClose={() => {
             setShowPropertiesPanel(false)
             setSelectedNodeId(null)
@@ -784,11 +831,20 @@ serve({
       {/* Main Canvas */}
       <div ref={reactFlowWrapper} className="h-full w-full pt-16">
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              onDeleteNode,
+              onAddNode,
+              onDuplicateNode,
+            },
+          }))}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodesDelete={onNodesDelete}
           onInit={setReactFlowInstance}
           nodeTypes={nodeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
@@ -836,7 +892,12 @@ serve({
       />
 
       {/* Code Export Dialog */}
-      {showCodeExport && <CodeExportDialog nodes={nodes} edges={edges} onClose={() => setShowCodeExport(false)} />}
+      <CodeExportDialog
+        open={showCodeExport}
+        onOpenChange={setShowCodeExport}
+        nodes={nodes}
+        edges={edges}
+      />
 
       {/* Execution Panel */}
       {showExecution && <ExecutionPanel nodes={nodes} edges={edges} onClose={() => setShowExecution(false)} />}
