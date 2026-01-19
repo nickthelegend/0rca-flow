@@ -2,7 +2,8 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { fetchMcpTools } from "@/lib/mcp-actions"
-import { X, ChevronRight, Trash2, Shield, Brain, BookOpen, FileOutput, Settings2, Sparkles, MessageSquare, Wrench, Info, Zap, Database, Cpu, History, Search, Lock, Key, Fingerprint, Target, Trophy, Server, Globe, Clock, MessageCircle, Hash, RefreshCw, Loader2 } from "lucide-react"
+import { generateWallet } from "@/lib/wallet-actions"
+import { X, ChevronRight, Trash2, Shield, Brain, BookOpen, FileOutput, Settings2, Sparkles, MessageSquare, Wrench, Info, Zap, Database, Cpu, History, Search, Lock, Key, Fingerprint, Target, Trophy, Server, Globe, Clock, MessageCircle, Hash, RefreshCw, Loader2, Split, Monitor, Wallet, ShieldCheck, Eye, EyeOff, Copy } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -178,6 +179,34 @@ const nodeInfo: Record<string, { name: string; description: string; icon: any; c
     color: "from-[#5865F2] to-[#404EED]",
     theme: "#5865F2",
   },
+  router: {
+    name: "Logic Router",
+    description: "Multi-path execution based on conditional evaluations.",
+    icon: Split,
+    color: "from-pink-500 to-rose-600",
+    theme: "#ec4899",
+  },
+  debug: {
+    name: "RT Debugger",
+    description: "Live monitoring of data packet flow and tool execution.",
+    icon: Monitor,
+    color: "from-emerald-500 to-teal-600",
+    theme: "#10b981",
+  },
+  state: {
+    name: "Memory Kernel",
+    description: "Standardized session state and persistent memory variables.",
+    icon: Database,
+    color: "from-blue-600 to-cyan-600",
+    theme: "#2563eb",
+  },
+  wallet: {
+    name: "Safe Wallet",
+    description: "Multi-chain on-chain identity and secure key management.",
+    icon: Wallet,
+    color: "from-orange-500 to-amber-600",
+    theme: "#f59e0b",
+  },
 }
 
 const MotionDiv = motion.div as any
@@ -195,9 +224,30 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
   }
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [showKey, setShowKey] = useState(false)
 
   const updateData = (key: string, value: any) => {
     onUpdateNodeData(node.id, { ...node.data, [key]: value })
+  }
+
+  const handleGenerateWallet = async () => {
+    setIsGenerating(true)
+    try {
+      const result = await generateWallet()
+      if (result.success) {
+        onUpdateNodeData(node.id, {
+          ...node.data,
+          address: result.address,
+          privateKey: result.privateKey,
+          generatedAt: new Date().toISOString()
+        })
+      }
+    } catch (e) {
+      console.error("Wallet gen failed", e)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleSyncMcp = async () => {
@@ -1293,6 +1343,245 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
                     onChange={(e) => updateData("webhookUrl", e.target.value)}
                     className="h-11 border-white/5 bg-white/[0.03] rounded-xl font-mono text-indigo-400"
                   />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case "router":
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Evaluation Logic</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">Routing Condition (Code/Expression)</Label>
+                  <Textarea
+                    placeholder="e.g. data.status === 200"
+                    value={node.data.condition || ""}
+                    onChange={(e) => updateData("condition", e.target.value)}
+                    className="min-h-[100px] border-white/5 bg-white/[0.03] rounded-xl font-mono text-pink-400"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-white/20">Defined Paths</Label>
+                  {(node.data.routes || []).map((route: any, idx: number) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input
+                        value={route.label}
+                        onChange={(e) => {
+                          const newRoutes = [...node.data.routes]
+                          newRoutes[idx].label = e.target.value
+                          updateData("routes", newRoutes)
+                        }}
+                        className="h-9 bg-white/[0.02] border-white/5 text-xs"
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-[10px] border-dashed border-white/10 hover:bg-pink-500/5 hover:text-pink-400"
+                    onClick={() => {
+                      const newRoutes = [...(node.data.routes || []), { id: `path-${Date.now()}`, label: "New Path" }]
+                      updateData("routes", newRoutes)
+                    }}
+                  >
+                    + Add Execution Path
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case "debug":
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Live Trace Log</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[9px] uppercase tracking-tighter text-white/20 hover:text-red-400"
+                  onClick={() => updateData("logs", [])}
+                >
+                  Clear Buffer
+                </Button>
+              </div>
+              <div className="space-y-4">
+                <div className="h-64 bg-black/40 rounded-2xl border border-white/5 p-4 font-mono text-[10px] overflow-y-auto no-scrollbar-firefox">
+                  {(node.data.logs || []).length > 0 ? (
+                    (node.data.logs || []).map((log: any, idx: number) => (
+                      <div key={idx} className="mb-2 flex gap-2">
+                        <span className="text-white/20">[{log.timestamp}]</span>
+                        <span className={log.type === 'error' ? 'text-red-400' : 'text-emerald-400'}>{log.content}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-white/10 italic">
+                      No packets captured...
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                  <Monitor className="w-3 h-3 text-emerald-400" />
+                  <p className="text-[10px] text-emerald-400/80">Listening for multi-chain event streams</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case "state":
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Kernel Configuration</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">Global Persistence Key</Label>
+                  <Input
+                    placeholder="local.session.id"
+                    value={node.data.storageKey || ""}
+                    onChange={(e) => updateData("storageKey", e.target.value)}
+                    className="h-11 border-white/5 bg-white/[0.03] rounded-xl font-mono"
+                  />
+                </div>
+                <div className="space-y-3 pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-white/20">Variable Registry</Label>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[9px] text-blue-400"
+                      onClick={() => {
+                        const newVars = [...(node.data.variables || []), { name: "new_var", value: "" }]
+                        updateData("variables", newVars)
+                      }}
+                    >
+                      + New Key
+                    </Button>
+                  </div>
+                  {(node.data.variables || []).map((v: any, idx: number) => (
+                    <div key={idx} className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Key"
+                        value={v.name}
+                        onChange={(e) => {
+                          const newVars = [...node.data.variables]
+                          newVars[idx].name = e.target.value
+                          updateData("variables", newVars)
+                        }}
+                        className="h-8 bg-white/[0.01] border-white/5 text-[10px] font-mono"
+                      />
+                      <Input
+                        placeholder="Default Value"
+                        value={v.value}
+                        onChange={(e) => {
+                          const newVars = [...node.data.variables]
+                          newVars[idx].value = e.target.value
+                          updateData("variables", newVars)
+                        }}
+                        className="h-8 bg-white/[0.01] border-white/5 text-[10px] font-mono text-blue-400"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case "wallet":
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Secure Identity</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">EVM Address (Public)</Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="0x..."
+                      value={node.data.address || ""}
+                      onChange={(e) => updateData("address", e.target.value)}
+                      className="h-11 border-white/5 bg-white/[0.03] rounded-xl font-mono text-xs text-orange-400"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-white/20 hover:text-white"
+                        onClick={() => {
+                          if (node.data.address) navigator.clipboard.writeText(node.data.address)
+                        }}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] text-white/60">Private Key (Secret)</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-[9px] text-white/40"
+                      onClick={() => setShowKey(!showKey)}
+                    >
+                      {showKey ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                      {showKey ? "Hide" : "Reveal"}
+                    </Button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      type={showKey ? "text" : "password"}
+                      placeholder="0x..."
+                      value={node.data.privateKey || ""}
+                      onChange={(e) => updateData("privateKey", e.target.value)}
+                      className="h-11 border-white/5 bg-white/[0.03] rounded-xl font-mono text-xs text-rose-400"
+                    />
+                  </div>
+                  <p className="text-[9px] text-white/20 italic px-1">Never share your private key. It is stored locally in your browser context.</p>
+                </div>
+
+                <div className="pt-4 space-y-3">
+                  <Button
+                    onClick={handleGenerateWallet}
+                    disabled={isGenerating}
+                    className="w-full h-11 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white rounded-xl text-xs font-bold gap-2 shadow-lg shadow-orange-900/20"
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {node.data.address ? "Regenerate Identity" : "Generate Secure Wallet"}
+                  </Button>
+
+                  <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    <div>
+                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-tight">On-Chain Shield Active</p>
+                      <p className="text-[9px] text-emerald-400/60 leading-tight">This key will be used by the agent to sign cross-chain transactions.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-white/5">
+                  <Label className="text-[11px] text-white/60">Preferred Network</Label>
+                  <Select value={node.data.network || "cronos"} onValueChange={(v) => updateData("network", v)}>
+                    <SelectTrigger className="h-11 border-white/5 bg-white/[0.03] rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a25]/95">
+                      <SelectItem value="cronos">Cronos Mainnet</SelectItem>
+                      <SelectItem value="cronos-test">Cronos zkEVM Testnet</SelectItem>
+                      <SelectItem value="ethereum">Ethereum</SelectItem>
+                      <SelectItem value="polygon">Polygon</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>

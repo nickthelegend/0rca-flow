@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Search, X, Sparkles, Bot, FileText, Wrench, Brain, BookOpen, Shield, FileOutput, Cpu, MessageCircle, Server, Hash } from "lucide-react"
+import { Search, X, Sparkles, Bot, FileText, Wrench, Brain, BookOpen, Shield, FileOutput, Cpu, MessageCircle, Server, Hash, Split, Monitor, Database, Wallet } from "lucide-react"
 
 interface AgentAddNodePopoverProps {
   isOpen: boolean
@@ -62,6 +62,50 @@ const agentNodeCategories = [
         description: "Standardized tool protocols",
         icon: Server,
         color: "from-blue-600 to-indigo-600",
+      },
+      {
+        type: "wallet",
+        name: "Safe Wallet",
+        description: "On-chain identity & signer",
+        icon: Wallet,
+        color: "from-orange-500 to-amber-600",
+        isNew: true,
+      },
+    ],
+  },
+  {
+    name: "Logic & State",
+    icon: Split,
+    items: [
+      {
+        type: "router",
+        name: "Logic Router",
+        description: "Conditional path execution",
+        icon: Split,
+        color: "from-pink-500 to-rose-500",
+        isNew: true,
+      },
+      {
+        type: "state",
+        name: "Memory Kernel",
+        description: "Persistent session variables",
+        icon: Database,
+        color: "from-blue-600 to-cyan-600",
+        isNew: true,
+      },
+    ],
+  },
+  {
+    name: "Developer Tools",
+    icon: Monitor,
+    items: [
+      {
+        type: "debug",
+        name: "RT Debugger",
+        description: "Monitor live tool output",
+        icon: Monitor,
+        color: "from-emerald-500 to-teal-500",
+        isNew: true,
       },
     ],
   },
@@ -139,21 +183,26 @@ export function AgentAddNodePopover({
     if (isOpen) {
       if (triggerRef?.current) {
         const rect = triggerRef.current.getBoundingClientRect()
-        // Position to the right of the trigger button
+        // Try to center the popover on the trigger vertically, but keep it in view
+        const calculatedTop = rect.top - 50
+        const maxTop = window.innerHeight - 550 // Assuming popover height is around 550px
+
         setPopoverPosition({
-          top: Math.max(80, rect.top - 50),
+          top: Math.max(20, Math.min(calculatedTop, maxTop)),
           left: rect.right + 12,
         })
       } else if (position) {
         // Use provided position (from right-click context menu)
+        const maxTop = window.innerHeight - 550
+        const maxLeft = window.innerWidth - 340
         setPopoverPosition({
-          top: Math.min(position.y, window.innerHeight - 500),
-          left: Math.min(position.x, window.innerWidth - 400),
+          top: Math.max(20, Math.min(position.y, maxTop)),
+          left: Math.max(20, Math.min(position.x, maxLeft)),
         })
       } else {
         // Fallback to center
         setPopoverPosition({
-          top: window.innerHeight / 2 - 200,
+          top: Math.max(20, window.innerHeight / 2 - 275),
           left: window.innerWidth / 2 - 160,
         })
       }
@@ -248,7 +297,7 @@ export function AgentAddNodePopover({
         </div>
 
         {/* Categories */}
-        <div className="max-h-[400px] overflow-y-auto p-2">
+        <div className="max-h-[380px] overflow-y-auto p-2 custom-scrollbar">
           {filteredCategories.map((category) => (
             <div key={category.name} className="mb-4">
               <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-white/40">
@@ -310,6 +359,22 @@ export function AgentAddNodePopover({
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
     </div>
   )
 }

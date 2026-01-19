@@ -48,6 +48,10 @@ import IntelligenceModelNode from "@/components/nodes/intelligence-model-node"
 import TelegramNode from "@/components/nodes/telegram-node"
 import DiscordNode from "@/components/nodes/discord-node"
 import McpServerNode from "@/components/nodes/mcp-server-node"
+import RouterNode from "@/components/nodes/router-node"
+import DebuggerNode from "@/components/nodes/debugger-node"
+import StateNode from "@/components/nodes/state-node"
+import WalletNode from "@/components/nodes/wallet-node"
 
 const nodeTypes: NodeTypes = {
   agentCore: AgentCoreNode as any,
@@ -60,6 +64,10 @@ const nodeTypes: NodeTypes = {
   telegram: TelegramNode as any,
   discord: DiscordNode as any,
   mcpServer: McpServerNode as any,
+  router: RouterNode as any,
+  debug: DebuggerNode as any,
+  state: StateNode as any,
+  wallet: WalletNode as any,
 }
 
 const defaultEdgeOptions = {
@@ -101,6 +109,14 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
       return { webhookUrl: "" }
     case "mcpServer":
       return { url: "", tools: [], status: "idle" }
+    case "router":
+      return { condition: "result.status === 'ok'", routes: [{ id: "true", label: "Success" }, { id: "false", label: "Failure" }] }
+    case "debug":
+      return { logs: [] }
+    case "state":
+      return { storageKey: "local.session.0rca", variables: [{ name: "user_name", value: "dev" }] }
+    case "wallet":
+      return { address: "", privateKey: "", network: "cronos" }
     default:
       return {}
   }

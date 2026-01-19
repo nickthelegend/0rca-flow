@@ -190,6 +190,17 @@ export function AgentCoreNode({ data, selected, id }: NodeProps) {
             />
             <span className="text-[9px] font-bold text-amber-400/60 uppercase tracking-tighter">Tool</span>
           </div>
+          {/* Wallet Handle */}
+          <div className="flex flex-col items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Bottom}
+              id="wallet"
+              className="!w-3 !h-3 !bg-orange-500 !border-2 !border-orange-400 !static"
+              style={{ transform: "none" }}
+            />
+            <span className="text-[9px] font-bold text-orange-400/60 uppercase tracking-tighter">Wallet</span>
+          </div>
         </div>
       </div>
     </div>

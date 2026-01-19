@@ -152,7 +152,13 @@ function McpServerNode({ id, data, selected }: NodeProps) {
                     type="source"
                     position={Position.Right}
                     id="tool"
-                    className="!w-3 !h-3 !bg-blue-600 !border-2 !border-blue-400 !-right-1.5 shadow-[0_0_8px_rgba(37,99,235,0.4)]"
+                    className="!w-3 !h-3 !bg-emerald-500 !border-2 !border-emerald-400 !-right-1.5 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                />
+                <Handle
+                    type="source"
+                    position={Position.Bottom}
+                    id="tool-bottom"
+                    className="!w-3 !h-3 !bg-emerald-500 !border-2 !border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
                 />
             </Card>
         </NodeControls>
