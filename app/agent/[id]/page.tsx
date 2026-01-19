@@ -44,6 +44,10 @@ import { GuardrailsNode } from "@/components/nodes/guardrails-node"
 import { OutputParserNode } from "@/components/nodes/output-parser-node"
 import { AgentAddNodePopover } from "@/components/agent-add-node-popover"
 import { AgentTestPanel } from "@/components/agent-test-panel"
+import IntelligenceModelNode from "@/components/nodes/intelligence-model-node"
+import TelegramNode from "@/components/nodes/telegram-node"
+import DiscordNode from "@/components/nodes/discord-node"
+import McpServerNode from "@/components/nodes/mcp-server-node"
 
 const nodeTypes: NodeTypes = {
   agentCore: AgentCoreNode as any,
@@ -52,7 +56,10 @@ const nodeTypes: NodeTypes = {
   memory: MemoryNode as any,
   knowledgeBase: KnowledgeBaseNode as any,
   guardrails: GuardrailsNode as any,
-  outputParser: OutputParserNode as any,
+  intelligenceModel: IntelligenceModelNode as any,
+  telegram: TelegramNode as any,
+  discord: DiscordNode as any,
+  mcpServer: McpServerNode as any,
 }
 
 const defaultEdgeOptions = {
@@ -86,6 +93,14 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
       return { inputFilters: [], outputFilters: [], contentPolicy: "standard" }
     case "outputParser":
       return { format: "text", schema: null, validation: true }
+    case "intelligenceModel":
+      return { model: "gpt-4o", provider: "openai" }
+    case "telegram":
+      return { botToken: "", chatId: "" }
+    case "discord":
+      return { webhookUrl: "" }
+    case "mcpServer":
+      return { url: "", tools: [], status: "idle" }
     default:
       return {}
   }
@@ -329,6 +344,12 @@ function AgentBuilderInner() {
         if (selectionChange.selected) {
           setSelectedNodeId(selectionChange.id)
           setShowPropertiesPanel(true)
+        } else {
+          // If the currently selected node is being unselected
+          if (selectedNodeId === selectionChange.id) {
+            setSelectedNodeId(null)
+            setShowPropertiesPanel(false)
+          }
         }
       }
     },
@@ -575,6 +596,7 @@ function AgentBuilderInner() {
       {/* Properties Panel */}
       {showPropertiesPanel && selectedNode && (
         <NodePropertiesPanel
+          key={selectedNode.id}
           node={selectedNode as any}
           onUpdateNodeData={onUpdateNodeData}
           onDeleteNode={onDeleteNode}

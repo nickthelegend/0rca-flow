@@ -36,6 +36,8 @@ import StartNode from "@/components/nodes/start-node"
 import EndNode from "@/components/nodes/end-node"
 import ConditionalNode from "@/components/nodes/conditional-node"
 import HttpRequestNode from "@/components/nodes/http-request-node"
+import McpServerNode from "@/components/nodes/mcp-server-node"
+import CronNode from "@/components/nodes/cron-node"
 import { AgentNode } from "@/components/nodes/agent-node"
 import { AddNodePopover } from "@/components/add-node-popover"
 import { AddAgentPopover } from "@/components/add-agent-popover"
@@ -71,6 +73,8 @@ const nodeTypes: NodeTypes = {
   end: EndNode as any,
   conditional: ConditionalNode as any,
   httpRequest: HttpRequestNode as any,
+  mcpServer: McpServerNode as any,
+  cron: CronNode as any,
   agent: AgentNode as any,
 }
 
@@ -126,6 +130,10 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
       return { condition: "input1 === 'value'" }
     case "httpRequest":
       return { url: "https://api.example.com", method: "GET" }
+    case "mcpServer":
+      return { url: "", tools: [] }
+    case "cron":
+      return { schedule: "0 * * * *", timezone: "UTC" }
     case "agent":
       return { name: "AI Agent", description: "An autonomous AI agent", model: "openai/gpt-5" }
     default:

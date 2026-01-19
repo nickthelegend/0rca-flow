@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { Search, X, Sparkles, Bot, FileText, Wrench, Brain, BookOpen, Shield, FileOutput } from "lucide-react"
+import { Search, X, Sparkles, Bot, FileText, Wrench, Brain, BookOpen, Shield, FileOutput, Cpu, MessageCircle, Server, Hash } from "lucide-react"
 
 interface AgentAddNodePopoverProps {
   isOpen: boolean
@@ -16,8 +15,8 @@ interface AgentAddNodePopoverProps {
 
 const agentNodeCategories = [
   {
-    name: "Core",
-    icon: Sparkles,
+    name: "Brain & Model",
+    icon: Brain,
     items: [
       {
         type: "agentCore",
@@ -26,6 +25,43 @@ const agentNodeCategories = [
         icon: Bot,
         color: "from-emerald-500 to-teal-500",
         isNew: true,
+      },
+      {
+        type: "intelligenceModel",
+        name: "Intelligence Model",
+        description: "Connect specific LLM models",
+        icon: Cpu,
+        color: "from-violet-500 to-purple-500",
+        isNew: true,
+      },
+    ],
+  },
+  {
+    name: "Integrations",
+    icon: Sparkles,
+    items: [
+      {
+        type: "telegram",
+        name: "Telegram API",
+        description: "Bot and channel interactions",
+        icon: MessageCircle,
+        color: "from-sky-500 to-blue-500",
+        isNew: true,
+      },
+      {
+        type: "discord",
+        name: "Discord Webhook",
+        description: "Post messages to Discord channels",
+        icon: Hash,
+        color: "from-[#5865F2] to-[#404EED]",
+        isNew: true,
+      },
+      {
+        type: "mcpServer",
+        name: "MCP Gateway",
+        description: "Standardized tool protocols",
+        icon: Server,
+        color: "from-blue-600 to-indigo-600",
       },
     ],
   },
@@ -216,7 +252,7 @@ export function AgentAddNodePopover({
           {filteredCategories.map((category) => (
             <div key={category.name} className="mb-4">
               <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-white/40">
-                <Sparkles className="w-3 h-3 text-emerald-400" />
+                <category.icon className="w-3 h-3 text-emerald-400" />
                 <span>{category.name}</span>
                 <span className="text-white/20">({category.items.length})</span>
               </div>

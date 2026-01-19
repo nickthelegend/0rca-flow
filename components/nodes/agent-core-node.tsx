@@ -101,46 +101,96 @@ export function AgentCoreNode({ data, selected, id }: NodeProps) {
 
 
       <div
-        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[280px] ${selected ? "border-emerald-500 shadow-lg shadow-emerald-500/20" : "border-white/10 hover:border-white/20"
+        className={`relative bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border-2 transition-all duration-200 min-w-[320px] ${selected ? "border-emerald-500 shadow-lg shadow-emerald-500/20" : "border-white/10 hover:border-white/20"
           }`}
       >
+        {/* Main Input/Output Handles */}
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3 !h-3 !bg-emerald-500 !border-2 !border-emerald-400"
+          id="trigger"
+          className="!w-4 !h-4 !bg-emerald-500 !border-2 !border-emerald-400 !rounded-sm"
         />
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-white font-semibold">{nodeData.name}</div>
-              <div className="text-emerald-400 text-xs">Core Agent</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20">
-            <Sparkles className="w-3 h-3 text-emerald-400" />
-            <span className="text-emerald-400 text-xs font-medium">AI</span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-4 space-y-3">
-          <div className="text-xs text-white/50">{nodeData.description}</div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-white/40">Model</span>
-            <span className="text-emerald-400 font-mono">{nodeData.model}</span>
-          </div>
-        </div>
 
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-3 !h-3 !bg-emerald-500 !border-2 !border-emerald-400"
+          id="output"
+          className="!w-4 !h-4 !bg-emerald-500 !border-2 !border-emerald-400"
         />
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-white/5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="text-white text-lg font-bold tracking-tight">{nodeData.name}</div>
+              <div className="text-emerald-400 text-[10px] uppercase font-bold tracking-[0.2em]">Tools Agent</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <Sparkles className="w-3 h-3 text-emerald-400" />
+            <span className="text-emerald-400 text-[10px] font-bold">ACTIVE</span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 pb-8 space-y-4">
+          <div className="text-xs text-white/40 leading-relaxed italic">"{nodeData.description}"</div>
+
+          <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex flex-col">
+              <span className="text-[9px] text-white/30 uppercase font-black tracking-widest">Base Model</span>
+              <span className="text-xs text-emerald-400/80 font-mono">{nodeData.model}</span>
+            </div>
+            <div className="h-8 w-px bg-white/5" />
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-white/30 uppercase font-black tracking-widest">Status</span>
+              <span className="text-[10px] text-emerald-500">Optimized</span>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM HANDLES (Modular Architecture) */}
+        <div className="absolute -bottom-10 left-0 right-0 flex justify-around px-4">
+          {/* Chat Model Handle */}
+          <div className="flex flex-col items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Bottom}
+              id="model"
+              className="!w-3 !h-3 !bg-violet-500 !border-2 !border-violet-400 !static"
+              style={{ transform: "none" }}
+            />
+            <span className="text-[9px] font-bold text-violet-400/60 uppercase tracking-tighter">Chat Model <span className="text-red-500">*</span></span>
+          </div>
+
+          {/* Memory Handle */}
+          <div className="flex flex-col items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Bottom}
+              id="memory"
+              className="!w-3 !h-3 !bg-blue-500 !border-2 !border-blue-400 !static"
+              style={{ transform: "none" }}
+            />
+            <span className="text-[9px] font-bold text-blue-400/60 uppercase tracking-tighter">Memory</span>
+          </div>
+
+          {/* Tool Handle */}
+          <div className="flex flex-col items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Bottom}
+              id="tool"
+              className="!w-3 !h-3 !bg-amber-500 !border-2 !border-amber-400 !static"
+              style={{ transform: "none" }}
+            />
+            <span className="text-[9px] font-bold text-amber-400/60 uppercase tracking-tighter">Tool</span>
+          </div>
+        </div>
       </div>
     </div>
   )

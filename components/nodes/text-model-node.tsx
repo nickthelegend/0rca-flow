@@ -32,8 +32,9 @@ export type TextModelNodeData = {
   hasOutgoingConnection?: boolean
 }
 
-function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
-  const status = data.status || "idle"
+function TextModelNode({ id, data, selected }: NodeProps) {
+  const nodeData = data as unknown as TextModelNodeData
+  const status = nodeData.status || "idle"
   const [isHovered, setIsHovered] = useState(false)
   const [showContextMenu, setShowContextMenu] = useState(false)
 
@@ -42,7 +43,7 @@ function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
       {/* Floating Toolbar */}
       {selected && (
         <div className="absolute -top-12 left-1/2 z-50 -translate-x-1/2 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
-          <div className="flex items-center gap-1 rounded-full border border-white/10 bg-card/95 px-2 py-1.5 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center gap-1 rounded-full border border-white/10 bg-[#1a1a25]/95 px-2 py-1.5 shadow-xl backdrop-blur-xl">
             <button className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground">
               <Play className="h-3.5 w-3.5" />
             </button>
@@ -64,10 +65,10 @@ function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
           {/* Context Menu */}
           {showContextMenu && (
             <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 z-[100]">
-              <div className="min-w-[160px] overflow-hidden rounded-lg border border-white/10 bg-popover/95 py-1 shadow-xl backdrop-blur-xl">
+              <div className="min-w-[160px] overflow-hidden rounded-lg border border-white/10 bg-[#1a1a25]/98 py-1 shadow-xl backdrop-blur-xl">
                 <button
                   onClick={() => {
-                    data.onCopyNode?.(id)
+                    nodeData.onCopyNode?.(id)
                     setShowContextMenu(false)
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-white/5"
@@ -77,7 +78,7 @@ function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
                 </button>
                 <button
                   onClick={() => {
-                    data.onDuplicateNode?.(id)
+                    nodeData.onDuplicateNode?.(id)
                     setShowContextMenu(false)
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-white/5"
@@ -88,7 +89,7 @@ function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
                 <div className="my-1 h-px bg-white/10" />
                 <button
                   onClick={() => {
-                    data.onDeleteNode?.(id)
+                    nodeData.onDeleteNode?.(id)
                     setShowContextMenu(false)
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10"
@@ -104,76 +105,84 @@ function TextModelNode({ id, data, selected }: NodeProps<TextModelNodeData>) {
 
       {/* Hover Tooltip */}
       {isHovered && !selected && (
-        <div className="absolute -top-14 left-1/2 z-40 -translate-x-1/2 animate-in fade-in-0 duration-150">
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-card/95 px-3 py-2 shadow-lg backdrop-blur-xl whitespace-nowrap">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-              <MessageSquare className="h-3 w-3 text-primary-foreground" />
+        <div className="absolute -top-14 left-1/2 z-40 -translate-x-1/2 animate-in fade-in-0 duration-150 pointer-events-none">
+          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#1a1a25]/95 px-3 py-2 shadow-lg backdrop-blur-xl whitespace-nowrap">
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-violet-500 to-purple-500">
+              <MessageSquare className="h-3 w-3 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium text-foreground">Text Model</p>
-              <p className="text-[10px] text-muted-foreground">Generate text with AI</p>
+              <p className="text-xs font-medium text-white">Intelligence Gateway</p>
+              <p className="text-[10px] text-white/40">Connect specific LLMs to your agents</p>
             </div>
           </div>
         </div>
       )}
 
       <Card
-        className={`min-w-[280px] max-w-[400px] border-2 bg-card transition-all ${getStatusColor(status, selected)}`}
+        className={`min-w-[280px] max-w-[400px] border-2 bg-[#09090b]/90 backdrop-blur-xl transition-all ${getStatusColor(status, selected)}`}
       >
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-            <MessageSquare className="h-4 w-4 text-primary-foreground" />
+        <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3 bg-violet-600/10 rounded-t-xl">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 shadow-lg shadow-violet-600/20">
+            <MessageSquare className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-foreground">Text Model</h3>
-            <p className="text-xs text-muted-foreground">{data.model || "openai/gpt-5"}</p>
+            <h3 className="text-sm font-bold text-white tracking-tight uppercase tracking-wider">Intelligence</h3>
+            <p className="text-[10px] text-violet-400 font-mono truncate">{nodeData.model || "gpt-4o"}</p>
           </div>
-          <Settings className="h-4 w-4 text-muted-foreground" />
+          <Settings className="h-4 w-4 text-white/20" />
         </div>
 
-        <div className="space-y-2 p-4">
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Temperature:</span>
-            <span className="font-mono text-foreground">{data.temperature || 0.7}</span>
+        <div className="space-y-3 p-4">
+          <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-widest text-white/40">
+            <span>Precision</span>
+            <span className="text-violet-400">{(1 - (nodeData.temperature || 0.7)).toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Max Tokens:</span>
-            <span className="font-mono text-foreground">{data.maxTokens || 2000}</span>
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-violet-500" style={{ width: `${(1 - (nodeData.temperature || 0.7)) * 100}%` }} />
           </div>
-          {data.structuredOutput && (
+
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <div className="bg-white/[0.03] border border-white/5 p-2 rounded-lg">
+              <p className="text-[9px] text-white/30 uppercase font-bold">Max Tokens</p>
+              <p className="text-xs font-mono text-white/80">{nodeData.maxTokens || 2000}</p>
+            </div>
+            <div className="bg-white/[0.03] border border-white/5 p-2 rounded-lg">
+              <p className="text-[9px] text-white/30 uppercase font-bold">Context</p>
+              <p className="text-xs font-mono text-white/80">Active</p>
+            </div>
+          </div>
+          {nodeData.structuredOutput && (
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Structured:</span>
-              <span className="font-mono text-foreground">{data.schemaName || "Yes"}</span>
+              <span className="text-muted-foreground text-[10px]">Structured:</span>
+              <span className="font-mono text-white/60 text-[10px]">{nodeData.schemaName || "Yes"}</span>
             </div>
           )}
           {status === "running" && (
-            <div className="flex items-center gap-2 text-xs text-yellow-600">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-yellow-500" />
-              Running...
+            <div className="flex items-center gap-2 text-[10px] text-yellow-500/80 uppercase font-bold tracking-tighter pt-1">
+              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
+              Processing Neural Path...
             </div>
           )}
         </div>
 
-        {data.output && (
-          <div className="border-t border-border bg-secondary/30 p-3">
-            <p className="mb-1 text-xs font-medium text-muted-foreground">Output:</p>
-            <div className="rounded bg-background p-2 max-h-32 overflow-y-auto">
-              <p className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {typeof data.output === "object" && data.output.text
-                  ? data.output.text
-                  : typeof data.output === "string"
-                    ? data.output
-                    : JSON.stringify(data.output, null, 2)}
+        {nodeData.output && (
+          <div className="border-t border-white/5 bg-white/[0.02] p-3">
+            <p className="mb-1 text-[9px] font-bold text-white/30 uppercase tracking-widest">Neural Response:</p>
+            <div className="rounded-lg bg-black/40 border border-white/5 p-2 max-h-32 overflow-y-auto custom-scrollbar">
+              <p className="text-[11px] text-white/70 whitespace-pre-wrap break-words font-mono leading-relaxed">
+                {typeof nodeData.output === "object" && nodeData.output.text
+                  ? nodeData.output.text
+                  : typeof nodeData.output === "string"
+                    ? nodeData.output
+                    : JSON.stringify(nodeData.output, null, 2)}
               </p>
             </div>
           </div>
         )}
 
-        <Handle type="target" position={Position.Left} id="prompt" className="!bg-primary" />
-        <Handle type="source" position={Position.Right} id="output" className="!bg-primary" />
+        <Handle type="target" position={Position.Left} id="prompt" className="!w-3 !h-3 !bg-violet-500 !border-2 !border-violet-400" />
+        <Handle type="source" position={Position.Right} id="output" className="!w-3 !h-3 !bg-violet-500 !border-2 !border-violet-400" />
       </Card>
-
-
     </div>
   )
 }
