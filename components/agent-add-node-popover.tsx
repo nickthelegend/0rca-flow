@@ -27,6 +27,14 @@ const agentNodeCategories = [
         isNew: true,
       },
       {
+        type: "cryptoComAgent",
+        name: "Crypto.com Agent",
+        description: "Specialized DeFi Agent (x402)",
+        icon: Wallet,
+        color: "from-[#002D74] to-[#011B45]",
+        isNew: true,
+      },
+      {
         type: "intelligenceModel",
         name: "Intelligence Model",
         description: "Connect specific LLM models",

@@ -96,8 +96,11 @@ import { DeploymentModal } from "@/components/deployment-modal"
 import { useAgentRegistration } from "@/hooks/use-agent-registration"
 import { RegistrationModal } from "@/components/registration-modal"
 
+import { CryptoComAgentNode } from "@/components/nodes/crypto-com-agent-node"
+
 const nodeTypes: NodeTypes = {
   agentCore: AgentCoreNode as any,
+  cryptoComAgent: CryptoComAgentNode as any,
   systemPrompt: SystemPromptNode as any,
   toolsConfig: ToolsConfigNode as any,
   memory: MemoryNode as any,
@@ -132,6 +135,16 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
   switch (type) {
     case "agentCore":
       return { name: "AI Agent", model: "openai/gpt-5", description: "An intelligent AI agent" }
+    case "cryptoComAgent":
+      return {
+        name: "DeFi Agent",
+        model: "google/gemini-2.0-flash",
+        description: "Crypto.com On-Chain Agent",
+        cdcApiKey: "",
+        cdcPrivateKey: "",
+        transferLimit: -1,
+        timeout: 60
+      }
     case "systemPrompt":
       return { content: "You are a helpful AI assistant.", role: "system" }
     case "toolsConfig":

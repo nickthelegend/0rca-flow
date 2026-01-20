@@ -102,6 +102,13 @@ const nodeInfo: Record<string, { name: string; description: string; icon: any; c
     color: "from-emerald-500 to-teal-500",
     theme: "#10b981",
   },
+  cryptoComAgent: {
+    name: "CDC DeFi Agent",
+    description: "Specialized Crypto.com SDK agent for on-chain DeFi operations.",
+    icon: Wallet,
+    color: "from-[#002D74] to-[#011B45]",
+    theme: "#002D74",
+  },
   systemPrompt: {
     name: "Identity Protocol",
     description: "Define constraints, personality, and behavioral heuristics.",
@@ -536,6 +543,87 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
               <p className="text-[11px] text-amber-500/70 leading-relaxed italic">
                 Connect an <span className="text-white font-bold">Intelligence Model</span> to the bottom handle of this node to enable reasoning.
               </p>
+            </div>
+          </div>
+        )
+
+      case "cryptoComAgent":
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">CDC DeFi Agent Identity</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">Agent Name</Label>
+                  <Input
+                    value={node.data.name || ""}
+                    onChange={(e) => updateData("name", e.target.value)}
+                    placeholder="e.g. Liquid Staker"
+                    className="h-11 border-white/5 bg-white/[0.03] rounded-xl focus:border-[#002D74]/30"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">Objective / Bio</Label>
+                  <Textarea
+                    value={node.data.description || ""}
+                    onChange={(e) => updateData("description", e.target.value)}
+                    placeholder="Explain what this agent does for its users..."
+                    className="min-h-[120px] bg-white/[0.03] border-white/5 rounded-2xl p-4 resize-none text-xs focus:ring-1 focus:ring-[#002D74]/20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-4 py-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
+              <div className="flex items-center gap-2 mb-2">
+                <Key className="w-3 h-3 text-blue-400" />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-blue-400/80">CDC Credentials</Label>
+              </div>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-white/40">CDC API KEY</Label>
+                  <Input
+                    type="password"
+                    placeholder="sk-proj-..."
+                    value={node.data.cdcApiKey || ""}
+                    onChange={(e) => updateData("cdcApiKey", e.target.value)}
+                    className="h-9 bg-black/20 border-white/5 text-xs rounded-lg focus:ring-blue-500/40"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-white/40">CDC PRIVATE KEY</Label>
+                  <Input
+                    type="password"
+                    placeholder="0x..."
+                    value={node.data.cdcPrivateKey || ""}
+                    onChange={(e) => updateData("cdcPrivateKey", e.target.value)}
+                    className="h-9 bg-black/20 border-white/5 text-xs rounded-lg focus:ring-blue-500/40"
+                  />
+                </div>
+              </div>
+              <p className="text-[9px] text-white/20 italic mt-2">These keys power the Crypto.com SDK backend.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-[11px] text-white/60">Transfer Limit</Label>
+                <Input
+                  type="number"
+                  value={node.data.transferLimit || -1}
+                  onChange={(e) => updateData("transferLimit", parseFloat(e.target.value))}
+                  className="h-10 border-white/5 bg-white/[0.03] rounded-xl text-xs"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[11px] text-white/60">Timeout (s)</Label>
+                <Input
+                  type="number"
+                  value={node.data.timeout || 60}
+                  onChange={(e) => updateData("timeout", parseFloat(e.target.value))}
+                  className="h-10 border-white/5 bg-white/[0.03] rounded-xl text-xs"
+                />
+              </div>
             </div>
           </div>
         )
