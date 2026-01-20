@@ -188,6 +188,7 @@ function AgentBuilderInner() {
   const [showDeploymentModal, setShowDeploymentModal] = useState(false)
   const [deploymentResult, setDeploymentResult] = useState<any>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [persistedAddress, setPersistedAddress] = useState<string | null>(null)
 
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [isEditingName, setIsEditingName] = useState(false)
@@ -239,7 +240,20 @@ function AgentBuilderInner() {
         }
 
         if (data) {
-          setNodes(data.nodes || initialNodesList)
+          setPersistedAddress(data.contract_address || null)
+          let loadedNodes = data.nodes || initialNodesList
+
+          // Sync contract address into wallet node if present in DB but missing in nodes
+          if (data.contract_address) {
+            loadedNodes = loadedNodes.map((n: any) => {
+              if (n.type === 'wallet' && !n.data?.address) {
+                return { ...n, data: { ...n.data, address: data.contract_address } }
+              }
+              return n
+            })
+          }
+
+          setNodes(loadedNodes)
           setEdges(data.edges || [])
           setAgentName(data.name || "Untitled Agent")
         } else {
@@ -254,6 +268,7 @@ function AgentBuilderInner() {
 
   const { zoomIn, zoomOut, fitView } = useReactFlow()
 
+  const isRegistered = persistedAddress || nodes.some(n => n.type === 'wallet' && n.data?.address)
   const selectedNode = selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) : null
 
   useEffect(() => {
@@ -299,7 +314,7 @@ function AgentBuilderInner() {
     } finally {
       setIsSaving(false)
     }
-  }, [nodes, edges, agentName, agentId, walletAddress])
+  }, [nodes, edges, agentName, agentId, walletAddress, persistedAddress])
 
   // Deploy Agent
   const handleDeploy = useCallback(async () => {
@@ -336,8 +351,51 @@ function AgentBuilderInner() {
     const description = String(coreNode?.data?.description || "A sovereign agent built on 0rca")
 
     setShowRegistrationModal(true)
-    await registerAgent(name, description)
-  }, [nodes, agentName, registerAgent])
+    const result = await registerAgent(name, description)
+
+    if (result && result.agentContractAddress) {
+      setPersistedAddress(result.agentContractAddress)
+
+      // 0. Update nodes in local state (so wallet node shows the address)
+      // This is crucial because it will be saved into the 'nodes' JSONB column
+      const updatedNodes = nodes.map(node => {
+        if (node.type === 'wallet') {
+          return { ...node, data: { ...node.data, address: result.agentContractAddress } }
+        }
+        return node
+      })
+      setNodes(updatedNodes)
+
+      try {
+        // Get the actual Supabase User UUID (EVM address !== UUID)
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // 1. Update live Agent record
+        await supabase
+          .from("agents")
+          .upsert({
+            user_id: user?.id, // Use the real UUID from Supabase auth
+            name: agentId,
+            subdomain: `${agentId}.0rca.live`,
+            contract_address: result.agentContractAddress,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'subdomain' })
+
+        // 2. Trigger a save of the workflow to persist nodes JSON (which now has the address)
+        await supabase
+          .from("agent_workflows")
+          .update({
+            nodes: updatedNodes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', agentId)
+
+        console.log("[0rca] Supabase synced with on-chain identity via nodes JSON and agents table (subdomain match)")
+      } catch (e) {
+        console.error("Failed to sync registration to Supabase:", e)
+      }
+    }
+  }, [nodes, agentName, agentId, registerAgent])
 
   // Auto-save disabled as requested
   /*
@@ -681,32 +739,36 @@ function AgentBuilderInner() {
                 // Add your publish logic here
               }}
             />
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
-              onClick={handleRegisterOnChain}
-              disabled={isRegisteringOnChain}
-            >
-              {isRegisteringOnChain ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <ShieldCheck className="w-4 h-4 mr-2" />
-              )}
-              {isRegisteringOnChain ? "Registering..." : "Register Agent"}
-            </Button>
-            <Button
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20"
-              onClick={handleDeploy}
-              disabled={isDeploying}
-            >
-              {isDeploying ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4 mr-2" />
-              )}
-              {isDeploying ? "Deploying..." : "One-Click Deploy"}
-            </Button>
+            {!isRegistered && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                onClick={handleRegisterOnChain}
+                disabled={isRegisteringOnChain}
+              >
+                {isRegisteringOnChain ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                )}
+                {isRegisteringOnChain ? "Registering..." : "Register Agent"}
+              </Button>
+            )}
+            {isRegistered && (
+              <Button
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20"
+                onClick={handleDeploy}
+                disabled={isDeploying}
+              >
+                {isDeploying ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4 mr-2" />
+                )}
+                {isDeploying ? "Deploying..." : "One-Click Deploy"}
+              </Button>
+            )}
           </div>
         </div>
       </div>

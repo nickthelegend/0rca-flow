@@ -32,6 +32,7 @@ export async function deployAgent(agentId: string, nodes: any[], edges: any[]) {
         const formData = new FormData()
         const file = new Blob([zipBlob as any], { type: 'application/zip' })
         formData.append('file', file, 'agent.zip')
+        formData.append('agentId', agentId)
 
         const envVars = extractEnvVars(nodes)
         formData.append('envVars', JSON.stringify(envVars))
