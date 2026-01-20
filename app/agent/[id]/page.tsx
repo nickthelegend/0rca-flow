@@ -93,6 +93,8 @@ import WalletNode from "@/components/nodes/wallet-node"
 import { deployAgent } from "@/lib/deploy-actions"
 import { toast } from "sonner"
 import { DeploymentModal } from "@/components/deployment-modal"
+import { useAgentRegistration } from "@/hooks/use-agent-registration"
+import { RegistrationModal } from "@/components/registration-modal"
 
 const nodeTypes: NodeTypes = {
   agentCore: AgentCoreNode as any,
@@ -209,6 +211,17 @@ function AgentBuilderInner() {
   const nodesRef = useRef<Node[]>([])
   const edgesRef = useRef<Edge[]>([])
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null)
+  const {
+    registerAgent,
+    isRegistering: isRegisteringOnChain,
+    registrationStep,
+    txHashes,
+    agentContractAddress,
+    error: registrationError,
+    resetRegistration
+  } = useAgentRegistration()
+
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false)
 
   // Load Agent
   useEffect(() => {
@@ -316,6 +329,15 @@ function AgentBuilderInner() {
       setIsDeploying(false)
     }
   }, [nodes, edges, agentId, handleSave])
+
+  const handleRegisterOnChain = useCallback(async () => {
+    const coreNode = nodes.find(n => n.type === 'agentCore')
+    const name = String(coreNode?.data?.name || agentName)
+    const description = String(coreNode?.data?.description || "A sovereign agent built on 0rca")
+
+    setShowRegistrationModal(true)
+    await registerAgent(name, description)
+  }, [nodes, agentName, registerAgent])
 
   // Auto-save disabled as requested
   /*
@@ -663,10 +685,15 @@ function AgentBuilderInner() {
               variant="outline"
               size="sm"
               className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
-              onClick={() => toast.info("Registration protocol pending implementation")}
+              onClick={handleRegisterOnChain}
+              disabled={isRegisteringOnChain}
             >
-              <ShieldCheck className="w-4 h-4 mr-2" />
-              Register Agent
+              {isRegisteringOnChain ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-4 h-4 mr-2" />
+              )}
+              {isRegisteringOnChain ? "Registering..." : "Register Agent"}
             </Button>
             <Button
               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20"
@@ -778,6 +805,19 @@ function AgentBuilderInner() {
         isOpen={showDeploymentModal}
         onClose={() => setShowDeploymentModal(false)}
         deploymentData={deploymentResult}
+      />
+
+      {/* Registration Status Modal */}
+      <RegistrationModal
+        isOpen={showRegistrationModal}
+        onClose={() => {
+          setShowRegistrationModal(false)
+          resetRegistration()
+        }}
+        step={registrationStep}
+        txHashes={txHashes}
+        agentContractAddress={agentContractAddress}
+        error={registrationError}
       />
     </div>
   )
