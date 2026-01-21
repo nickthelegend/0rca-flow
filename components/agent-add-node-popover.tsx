@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Search, X, Sparkles, Bot, FileText, Wrench, Brain, BookOpen, Shield, FileOutput, Cpu, MessageCircle, Server, Hash, Split, Monitor, Database, Wallet } from "lucide-react"
+import { Search, X, Sparkles, Bot, FileText, Wrench, Brain, BookOpen, Shield, FileOutput, Cpu, MessageCircle, Server, Hash, Split, Monitor, Database, Wallet, Briefcase } from "lucide-react"
 
 interface AgentAddNodePopoverProps {
   isOpen: boolean
@@ -141,6 +141,28 @@ const agentNodeCategories = [
         description: "Conversation history management",
         icon: Brain,
         color: "from-purple-500 to-pink-500",
+      },
+    ],
+  },
+  {
+    name: "CrewAI Tools",
+    icon: Wrench,
+    items: [
+      {
+        type: "toolkit",
+        name: "Toolkit",
+        description: "Collector for multiple tools",
+        icon: Briefcase,
+        color: "from-blue-500 to-indigo-600",
+        isNew: true,
+      },
+      {
+        type: "crewaiTool",
+        name: "CrewAI Tool",
+        description: "Predefined agent capabilities",
+        icon: Wrench,
+        color: "from-amber-500 to-orange-600",
+        isNew: true,
       },
     ],
   },

@@ -17,11 +17,15 @@ export async function deployAgent(agentId: string, nodes: any[], edges: any[]) {
         const zip = new JSZip()
         zip.file("agent.py", agentCode)
 
-        let requirements = `orca-network-sdk\npython-dotenv\n`
+        let requirements = `orca-network-sdk>=1.0.5\npython-dotenv\n`
         const useCryptoComAgent = nodes.some(n => n.type === 'cryptoComAgent');
+        const useCrewAI = nodes.some(n => n.type === 'crewaiTool' || n.type === 'toolkit');
 
         if (useCryptoComAgent) {
             requirements += `crypto-com-agent-client\n`
+        }
+        if (useCrewAI) {
+            requirements += `crewai\ncrewai_tools\n`
         }
 
         zip.file("requirements.txt", requirements)
@@ -120,6 +124,31 @@ def main():
         }
     })
 
+    // Gather connected CrewAI tools
+    const connectedToolNames: string[] = []
+
+    // Find edges targeting the core node's 'tool' handle
+    const toolkitEdges = edges.filter(e => e.target === coreNode.id && e.targetHandle === 'tool')
+    toolkitEdges.forEach(te => {
+        const toolkitNode = nodes.find(n => n.id === te.source && n.type === 'toolkit')
+        if (toolkitNode) {
+            // Find tools connected to this toolkit
+            const toolEdges = edges.filter(e => e.target === toolkitNode.id)
+            toolEdges.forEach(tre => {
+                const toolNode = nodes.find(n => n.id === tre.source && n.type === 'crewaiTool')
+                if (toolNode && toolNode.data.toolId) {
+                    connectedToolNames.push(toolNode.data.toolId)
+                }
+            })
+        }
+
+        // Also allow direct connection from CrewAITool to Agent Core
+        const directToolNode = nodes.find(n => n.id === te.source && n.type === 'crewaiTool')
+        if (directToolNode && directToolNode.data.toolId) {
+            connectedToolNames.push(directToolNode.data.toolId)
+        }
+    })
+
     if (useCryptoComAgent) {
         code += `
     # Initialize the Crypto.com Agent (x402 + CDC Backend)
@@ -141,9 +170,9 @@ def main():
         instructions="""${systemPrompt}""",
         
         # Custom Tools
-        tools=tools
+        tools=tools + ${JSON.stringify(connectedToolNames)}
     )
-    print(f"[{agent.name}] Initialized Crypto.com Agent.")`
+    print(f"[{agent.name}] Initialized Crypto.com Agent with {len(agent.tools)} tools.")`
     } else {
         code += `
     # Initialize the Sovereign Agent (Standard)
@@ -154,9 +183,9 @@ def main():
         price="0.1",
         vault_address="${vaultAddress}",
         api_key=api_key,
-        tools=tools
+        tools=tools + ${JSON.stringify(connectedToolNames)}
     )
-    print(f"[{agent.name}] Initialized Sovereign Agent.")`
+    print(f"[{agent.name}] Initialized Sovereign Agent with {len(agent.native_tools) + len(agent.mcps)} tools.")`
     }
 
     code += `

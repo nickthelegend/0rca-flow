@@ -97,6 +97,8 @@ import { useAgentRegistration } from "@/hooks/use-agent-registration"
 import { RegistrationModal } from "@/components/registration-modal"
 
 import { CryptoComAgentNode } from "@/components/nodes/crypto-com-agent-node"
+import { ToolkitNode } from "@/components/nodes/toolkit-node"
+import { CrewAIToolNode } from "@/components/nodes/crewai-tool-node"
 
 const nodeTypes: NodeTypes = {
   agentCore: AgentCoreNode as any,
@@ -114,6 +116,8 @@ const nodeTypes: NodeTypes = {
   debug: DebuggerNode as any,
   state: StateNode as any,
   wallet: WalletNode as any,
+  toolkit: ToolkitNode as any,
+  crewaiTool: CrewAIToolNode as any,
 }
 
 const defaultEdgeOptions = {
@@ -173,6 +177,10 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
       return { storageKey: "local.session.0rca", variables: [{ name: "user_name", value: "dev" }] }
     case "wallet":
       return { address: "", privateKey: "", network: "cronos" }
+    case "toolkit":
+      return { name: "Tool Collection" }
+    case "crewaiTool":
+      return { toolId: "SerperDevTool" }
     default:
       return {}
   }

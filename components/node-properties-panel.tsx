@@ -214,6 +214,20 @@ const nodeInfo: Record<string, { name: string; description: string; icon: any; c
     color: "from-orange-500 to-amber-600",
     theme: "#f59e0b",
   },
+  toolkit: {
+    name: "Toolbox Collector",
+    description: "Group multiple specialized tools into a single logical capability bundle.",
+    icon: Server,
+    color: "from-blue-500 to-indigo-600",
+    theme: "#3b82f6",
+  },
+  crewaiTool: {
+    name: "CrewAI Capability",
+    description: "Native agent tools for web search, file handling, and code execution.",
+    icon: Wrench,
+    color: "from-amber-500 to-orange-600",
+    theme: "#f59e0b",
+  },
 }
 
 const MotionDiv = motion.div as any
@@ -1671,6 +1685,77 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case "toolkit":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Toolkit Settings</Label>
+              <div className="space-y-2">
+                <Label className="text-[11px] text-white/60">Collection Name</Label>
+                <Input
+                  value={node.data.name || ""}
+                  onChange={(e) => updateData("name", e.target.value)}
+                  placeholder="e.g. Web Tools"
+                  className="h-11 border-white/5 bg-white/[0.03] rounded-xl"
+                />
+              </div>
+              <p className="text-[11px] text-white/40 leading-relaxed italic">
+                This node collects multiple tool inputs and bundles them for the Agent Core.
+              </p>
+            </div>
+          </div>
+        )
+
+      case "crewaiTool":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Capability Selection</Label>
+              <div className="space-y-2">
+                <Label className="text-[11px] text-white/60">Select Native Tool</Label>
+                <Select
+                  value={node.data.toolId || "SerperDevTool"}
+                  onValueChange={(v) => updateData("toolId", v)}
+                >
+                  <SelectTrigger className="h-11 border-white/5 bg-white/[0.03] rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a25]/95 border-white/10 max-h-[300px]">
+                    <SelectItem value="SerperDevTool">Serper Search</SelectItem>
+                    <SelectItem value="BrowserbaseLoadTool">Browserbase</SelectItem>
+                    <SelectItem value="FirecrawlSearchTool">Firecrawl Search</SelectItem>
+                    <SelectItem value="ScrapeWebsiteTool">Scrape Website</SelectItem>
+                    <SelectItem value="CodeInterpreterTool">Code Interpreter</SelectItem>
+                    <SelectItem value="FileReadTool">File Read</SelectItem>
+                    <SelectItem value="DirectoryReadTool">Directory Read</SelectItem>
+                    <SelectItem value="GithubSearchTool">GitHub Search</SelectItem>
+                    <SelectItem value="PDFSearchTool">PDF Search</SelectItem>
+                    <SelectItem value="YoutubeVideoSearchTool">YouTube Search</SelectItem>
+                    <SelectItem value="VisionTool">Vision Analysis</SelectItem>
+                    <SelectItem value="EXASearchTool">EXA Search</SelectItem>
+                    <SelectItem value="ApifyActorsTool">Apify Actors</SelectItem>
+                    <SelectItem value="CodeDocsSearchTool">Code Docs Search</SelectItem>
+                    <SelectItem value="CSVSearchTool">CSV Search</SelectItem>
+                    <SelectItem value="DirectorySearchTool">Directory Search</SelectItem>
+                    <SelectItem value="DOCXSearchTool">DOCX Search</SelectItem>
+                    <SelectItem value="JSONSearchTool">JSON Search</SelectItem>
+                    <SelectItem value="MDXSearchTool">MDX Search</SelectItem>
+                    <SelectItem value="PGSearchTool">PG Search</SelectItem>
+                    <SelectItem value="XMLSearchTool">XML Search</SelectItem>
+                    <SelectItem value="YoutubeChannelSearchTool">YouTube Channel Search</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                <p className="text-[11px] text-orange-400/80 leading-relaxed">
+                  These tools are executed natively by the CrewAI framework during runtime.
+                </p>
               </div>
             </div>
           </div>
