@@ -39,6 +39,7 @@ import HttpRequestNode from "@/components/nodes/http-request-node"
 import McpServerNode from "@/components/nodes/mcp-server-node"
 import CronNode from "@/components/nodes/cron-node"
 import { AgentNode } from "@/components/nodes/agent-node"
+import { ContractAgentNode } from "@/components/nodes/contract-agent-node"
 import { AddNodePopover } from "@/components/add-node-popover"
 import { AddAgentPopover } from "@/components/add-agent-popover"
 import { AIChatbot } from "@/components/ai-chatbot"
@@ -76,6 +77,7 @@ const nodeTypes: NodeTypes = {
   mcpServer: McpServerNode as any,
   cron: CronNode as any,
   agent: AgentNode as any,
+  contractAgent: ContractAgentNode as any,
 }
 
 const initialNodes: Node[] = [
@@ -136,6 +138,12 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
       return { schedule: "0 * * * *", timezone: "UTC" }
     case "agent":
       return { name: "AI Agent", description: "An autonomous AI agent", model: "openai/gpt-5" }
+    case "contractAgent":
+      return {
+        name: "Contract Agent",
+        description: "Specialized for Smart Contract interactions & ABI discovery",
+        model: "gemini/gemini-2.0-flash"
+      }
     default:
       return {}
   }

@@ -78,6 +78,14 @@ const nodeCategories: NodeCategory[] = [
         color: "from-orange-500 to-red-500",
         isNew: true,
       },
+      {
+        type: "contractAgent",
+        name: "Contract Agent",
+        description: "Specialized for Smart Contract interactions",
+        icon: Search,
+        color: "from-cyan-500 to-blue-600",
+        isNew: true,
+      },
     ],
   },
   {
@@ -227,6 +235,26 @@ const nodeCategories: NodeCategory[] = [
         description: "Require human approval",
         icon: Users,
         color: "from-violet-500 to-purple-500",
+      },
+    ],
+  },
+  {
+    name: "Blockchain",
+    icon: Network,
+    items: [
+      {
+        type: "contractAgent",
+        name: "Contract Agent",
+        description: "Interact with any smart contract on-chain",
+        icon: Search,
+        color: "from-cyan-400 to-cyan-600",
+      },
+      {
+        type: "wallet",
+        name: "Wallet Connection",
+        description: "Manage and connect user wallets",
+        icon: Shield,
+        color: "from-orange-400 to-orange-600",
       },
     ],
   },

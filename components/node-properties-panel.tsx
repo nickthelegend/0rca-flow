@@ -109,6 +109,13 @@ const nodeInfo: Record<string, { name: string; description: string; icon: any; c
     color: "from-[#002D74] to-[#011B45]",
     theme: "#002D74",
   },
+  contractAgent: {
+    name: "Contract Agent",
+    description: "Specialized 0rca SDK agent for Smart Contract interactions & ABI discovery.",
+    icon: Search,
+    color: "from-cyan-400 to-cyan-700",
+    theme: "#00D1FF",
+  },
   systemPrompt: {
     name: "Identity Protocol",
     description: "Define constraints, personality, and behavioral heuristics.",
@@ -636,6 +643,79 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
                   value={node.data.timeout || 60}
                   onChange={(e) => updateData("timeout", parseFloat(e.target.value))}
                   className="h-10 border-white/5 bg-white/[0.03] rounded-xl text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case "contractAgent":
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Contract Agent Identity</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">Agent Name</Label>
+                  <Input
+                    value={node.data.name || ""}
+                    onChange={(e) => updateData("name", e.target.value)}
+                    placeholder="e.g. Moonlander Expert"
+                    className="h-11 border-white/5 bg-white/[0.03] rounded-xl focus:border-cyan-500/30"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-white/60">Instructions</Label>
+                  <Textarea
+                    value={node.data.description || ""}
+                    onChange={(e) => updateData("description", e.target.value)}
+                    placeholder="Define the agent's expertise and specific contract focus..."
+                    className="min-h-[120px] bg-white/[0.03] border-white/5 rounded-2xl p-4 resize-none text-xs focus:ring-1 focus:ring-cyan-500/20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-4 py-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/10">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="w-3 h-3 text-cyan-400" />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/80">Chain Configuration</Label>
+              </div>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-white/40">CRONOS EXPLORER API KEY (Optional)</Label>
+                  <Input
+                    type="password"
+                    placeholder="Enter API Key for ABI fetching"
+                    value={node.data.cronosApiKey || ""}
+                    onChange={(e) => updateData("cronosApiKey", e.target.value)}
+                    className="h-9 bg-black/20 border-white/5 text-xs rounded-lg focus:ring-cyan-500/40"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-white/40">RPC URL OVERRIDE (Optional)</Label>
+                  <Input
+                    placeholder="https://..."
+                    value={node.data.rpcUrl || ""}
+                    onChange={(e) => updateData("rpcUrl", e.target.value)}
+                    className="h-9 bg-black/20 border-white/5 text-xs rounded-lg focus:ring-cyan-500/40"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl bg-white/[0.02] p-4 border border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-semibold text-white/80 tracking-tight">Safety Limit (CRO)</Label>
+                  <p className="text-[10px] text-white/40 italic">Max value per transaction</p>
+                </div>
+                <Input
+                  type="number"
+                  value={node.data.safetyLimit || 100}
+                  onChange={(e) => updateData("safetyLimit", parseFloat(e.target.value))}
+                  className="w-24 h-9 bg-black/20 border-white/5 text-xs rounded-lg text-right pr-3"
                 />
               </div>
             </div>
