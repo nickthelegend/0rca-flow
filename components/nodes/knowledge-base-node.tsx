@@ -11,7 +11,7 @@ interface KnowledgeBaseNodeData {
   [key: string]: unknown
 }
 
-export function KnowledgeBaseNode({ data, selected, id }: NodeProps) {
+export function KnowledgeBaseNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as any // Use any to access injected handlers
 
   return (

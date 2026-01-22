@@ -11,7 +11,7 @@ interface ToolsConfigNodeData {
   [key: string]: unknown
 }
 
-export function ToolsConfigNode({ data, selected, id }: NodeProps) {
+export function ToolsConfigNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as any
 
   const activeTools = [

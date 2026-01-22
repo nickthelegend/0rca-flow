@@ -11,7 +11,7 @@ interface GuardrailsNodeData {
   [key: string]: unknown
 }
 
-export function GuardrailsNode({ data, selected, id }: NodeProps) {
+export function GuardrailsNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as any
 
   const totalFilters = (nodeData.inputFilters?.length || 0) + (nodeData.outputFilters?.length || 0)

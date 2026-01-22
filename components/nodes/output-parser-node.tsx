@@ -11,7 +11,7 @@ interface OutputParserNodeData {
   [key: string]: unknown
 }
 
-export function OutputParserNode({ data, selected, id }: NodeProps) {
+export function OutputParserNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as any
 
   return (

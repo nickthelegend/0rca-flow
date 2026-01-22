@@ -3,7 +3,7 @@ import { Bot } from "lucide-react"
 import Image from "next/image"
 import { NodeControls } from "./node-controls"
 
-export function AgentNode({ data, selected, id }: NodeProps) {
+export function AgentNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as any
   const getCategoryColor = (category?: string) => {
     switch (category) {

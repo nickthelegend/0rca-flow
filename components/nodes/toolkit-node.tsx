@@ -5,7 +5,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react"
 import { Briefcase } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
-export function ToolkitNode({ selected }: NodeProps) {
+export function ToolkitNode({ selected }: NodeProps<any>) {
     return (
         <div className="relative group">
             <div className={`p-0.5 rounded-2xl bg-gradient-to-br from-blue-500/50 to-indigo-600/50 transition-all ${selected ? 'ring-2 ring-blue-500 shadow-xl shadow-blue-500/20' : 'hover:scale-105 transition-transform'}`}>

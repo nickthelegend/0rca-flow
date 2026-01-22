@@ -16,7 +16,7 @@ export type RouterNodeData = {
     [key: string]: any
 }
 
-function RouterNode({ id, data, selected }: NodeProps) {
+function RouterNode({ id, data, selected }: NodeProps<any>) {
     const nodeData = data as RouterNodeData
     const [isHovered, setIsHovered] = useState(false)
     const routes = nodeData.routes || [

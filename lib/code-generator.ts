@@ -1,6 +1,6 @@
 import type { Node, Edge } from "@xyflow/react"
 
-export function generateAISDKCode(nodes: Node[], edges: Edge[]): string {
+export function generateAISDKCode(nodes: Node<any>[], edges: Edge<any>[]): string {
   const nodeMap = new Map(nodes.map((node) => [node.id, node]))
   const edgeMap = new Map<string, string[]>()
 
@@ -256,7 +256,7 @@ export function generateAISDKCode(nodes: Node[], edges: Edge[]): string {
   return code
 }
 
-export function generateRouteHandlerCode(nodes: Node[], edges: Edge[]): string {
+export function generateRouteHandlerCode(nodes: Node<any>[], edges: Edge<any>[]): string {
   let code = `import { generateText, embed, generateObject } from 'ai';\n`
   code += `import { google } from '@ai-sdk/google';\n`
   code += `import { openai } from '@ai-sdk/openai';\n`

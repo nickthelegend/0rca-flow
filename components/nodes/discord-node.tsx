@@ -4,7 +4,7 @@ import { memo } from "react"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
 import { Hash } from "lucide-react"
 
-export function DiscordNode({ data, selected }: NodeProps) {
+export function DiscordNode({ data, selected }: NodeProps<any>) {
     return (
         <div className={`relative group transition-all duration-300 ${selected ? "scale-110" : "hover:scale-105"}`}>
             <div className={`w-24 h-24 rounded-full flex flex-col items-center justify-center p-4 border-2 shadow-2xl backdrop-blur-xl transition-colors

@@ -14,7 +14,7 @@ interface AgentCoreNodeData {
   [key: string]: unknown
 }
 
-export function AgentCoreNode({ data, selected, id }: NodeProps) {
+export function AgentCoreNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as AgentCoreNodeData
   const [isHovered, setIsHovered] = useState(false)
   const [showContextMenu, setShowContextMenu] = useState(false)

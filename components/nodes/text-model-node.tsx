@@ -32,7 +32,7 @@ export type TextModelNodeData = {
   hasOutgoingConnection?: boolean
 }
 
-function TextModelNode({ id, data, selected }: NodeProps) {
+function TextModelNode({ id, data, selected }: NodeProps<any>) {
   const nodeData = data as unknown as TextModelNodeData
   const status = nodeData.status || "idle"
   const [isHovered, setIsHovered] = useState(false)

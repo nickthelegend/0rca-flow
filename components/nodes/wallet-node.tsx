@@ -18,7 +18,7 @@ export type WalletNodeData = {
     [key: string]: any
 }
 
-function WalletNode({ id, data, selected }: NodeProps) {
+function WalletNode({ id, data, selected }: NodeProps<any>) {
     const nodeData = data as WalletNodeData
     const [isHovered, setIsHovered] = useState(false)
     const [copied, setCopied] = useState(false)

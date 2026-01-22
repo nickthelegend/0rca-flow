@@ -4,7 +4,7 @@ import { memo } from "react"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
 import { Cpu } from "lucide-react"
 
-export function IntelligenceModelNode({ data, selected }: NodeProps) {
+export function IntelligenceModelNode({ data, selected }: NodeProps<any>) {
     const modelName = (data.model as string) || "gpt-4o"
 
     return (

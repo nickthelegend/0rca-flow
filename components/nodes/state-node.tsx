@@ -16,7 +16,7 @@ export type StateNodeData = {
     [key: string]: any
 }
 
-function StateNode({ id, data, selected }: NodeProps) {
+function StateNode({ id, data, selected }: NodeProps<any>) {
     const nodeData = data as StateNodeData
     const [isHovered, setIsHovered] = useState(false)
     const variables = nodeData.variables || [

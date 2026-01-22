@@ -21,7 +21,7 @@ export type McpServerNodeData = {
     [key: string]: any
 }
 
-function McpServerNode({ id, data, selected }: NodeProps) {
+function McpServerNode({ id, data, selected }: NodeProps<any>) {
     const nodeData = data as McpServerNodeData
     const status = nodeData.status || "idle"
     const [isHovered, setIsHovered] = useState(false)

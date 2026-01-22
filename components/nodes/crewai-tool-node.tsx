@@ -31,7 +31,7 @@ const PREDEFINED_TOOLS = [
     { id: "YoutubeChannelSearchTool", name: "YouTube Channel Search", description: "Search within YouTube channels" }
 ]
 
-export function CrewAIToolNode({ id, data, selected }: NodeProps) {
+export function CrewAIToolNode({ id, data, selected }: NodeProps<any>) {
     const [isOpen, setIsOpen] = useState(false)
 
     const selectedToolId = (data as any).toolId || PREDEFINED_TOOLS[0].id

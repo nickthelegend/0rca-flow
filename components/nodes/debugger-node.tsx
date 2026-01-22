@@ -15,7 +15,7 @@ export type DebuggerNodeData = {
     [key: string]: any
 }
 
-function DebuggerNode({ id, data, selected }: NodeProps) {
+function DebuggerNode({ id, data, selected }: NodeProps<any>) {
     const nodeData = data as DebuggerNodeData
     const [isHovered, setIsHovered] = useState(false)
     const logs = nodeData.logs || []
@@ -60,7 +60,7 @@ function DebuggerNode({ id, data, selected }: NodeProps) {
                                 <div key={idx} className="flex gap-2 text-[9px] leading-tight group">
                                     <span className="text-white/20 shrink-0">[{log.timestamp}]</span>
                                     <span className={`${log.type === 'error' ? 'text-red-400' :
-                                            log.type === 'success' ? 'text-emerald-400' : 'text-blue-400'
+                                        log.type === 'success' ? 'text-emerald-400' : 'text-blue-400'
                                         } break-all`}>
                                         {log.content}
                                     </span>

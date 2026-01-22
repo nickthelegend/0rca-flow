@@ -21,7 +21,7 @@ export type CronNodeData = {
     [key: string]: any
 }
 
-function CronNode({ id, data, selected }: NodeProps) {
+function CronNode({ id, data, selected }: NodeProps<any>) {
     const nodeData = data as unknown as CronNodeData
     const status = nodeData.status || "idle"
     const [isHovered, setIsHovered] = useState(false)

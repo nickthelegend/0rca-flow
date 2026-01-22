@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       }
 
       try {
-        const { nodes, edges }: { nodes: Node[]; edges: Edge[] } = await req.json()
+        const { nodes, edges }: { nodes: Node<any>[]; edges: Edge<any>[] } = await req.json()
 
         // Build execution graph
         const nodeMap = new Map(nodes.map((node) => [node.id, node]))
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
           sendUpdate({
             type: "node_start",
             nodeId,
-            nodeType: node.type,
+            nodeType: node.type || "unknown",
           })
 
           const inputs: any[] = []
@@ -150,7 +150,7 @@ export async function POST(req: Request) {
                 output = "Workflow started"
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -160,7 +160,7 @@ export async function POST(req: Request) {
                 output = endInput
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output: {
                     finalOutput: output,
                   },
@@ -189,7 +189,7 @@ export async function POST(req: Request) {
 
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output: {
                     condition: conditionCode,
                     result: output,
@@ -240,7 +240,7 @@ export async function POST(req: Request) {
 
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output: {
                     url,
                     method,
@@ -254,7 +254,7 @@ export async function POST(req: Request) {
                 output = inputs.length > 0 ? interpolateVariables(content, inputs) : content
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -264,15 +264,15 @@ export async function POST(req: Request) {
 
                 if (node.data.structuredOutput && node.data.schema) {
                   const textResult = await generateText({
-                    model: node.data.model || "openai/gpt-5",
+                    model: google(node.data.model || "gemini-1.5-pro"),
                     prompt: `${prompt}\n\nRespond in JSON format matching this schema: ${node.data.schema}`,
-                    temperature: node.data.temperature || 0.7,
-                    maxTokens: node.data.maxTokens || 2000,
-                  })
+                    temperature: (node.data.temperature as number) || 0.7,
+                    maxTokens: (node.data.maxTokens as number) || 2000,
+                  } as any)
                   output = textResult.text
                   executionLog.push({
                     nodeId,
-                    type: node.type,
+                    type: node.type || "unknown",
                     output: {
                       text: output,
                       structured: true,
@@ -282,15 +282,15 @@ export async function POST(req: Request) {
                   })
                 } else {
                   const textResult = await generateText({
-                    model: node.data.model || "openai/gpt-5",
+                    model: google(node.data.model || "gemini-1.5-pro"),
                     prompt: prompt,
-                    temperature: node.data.temperature || 0.7,
-                    maxTokens: node.data.maxTokens || 2000,
-                  })
+                    temperature: (node.data.temperature as number) || 0.7,
+                    maxTokens: (node.data.maxTokens as number) || 2000,
+                  } as any)
                   output = textResult.text
                   executionLog.push({
                     nodeId,
-                    type: node.type,
+                    type: node.type || "unknown",
                     output: {
                       text: output,
                       usage: textResult.usage,
@@ -323,7 +323,7 @@ export async function POST(req: Request) {
                 output = images.length > 0 ? images[0] : "No image generated"
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output: {
                     images,
                     prompt: imagePrompt,
@@ -355,7 +355,7 @@ export async function POST(req: Request) {
 
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -370,7 +370,7 @@ export async function POST(req: Request) {
                 }
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -380,7 +380,7 @@ export async function POST(req: Request) {
                 output = { embedding: "Embedding generation not implemented in demo" }
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -390,7 +390,7 @@ export async function POST(req: Request) {
                 output = { message: "Structured output not implemented in demo" }
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -418,7 +418,7 @@ export async function POST(req: Request) {
                 }
                 executionLog.push({
                   nodeId,
-                  type: node.type,
+                  type: node.type || "unknown",
                   output,
                 })
                 break
@@ -432,7 +432,7 @@ export async function POST(req: Request) {
             sendUpdate({
               type: "node_complete",
               nodeId,
-              nodeType: node.type,
+              nodeType: node.type || "unknown",
               output,
             })
 
@@ -441,7 +441,7 @@ export async function POST(req: Request) {
             const errorMessage = error.message || "Unknown error"
             executionLog.push({
               nodeId,
-              type: node.type,
+              type: node.type || "unknown",
               output: null,
               error: errorMessage,
             })
@@ -449,7 +449,7 @@ export async function POST(req: Request) {
             sendUpdate({
               type: "node_error",
               nodeId,
-              nodeType: node.type,
+              nodeType: node.type || "unknown",
               error: errorMessage,
             })
 

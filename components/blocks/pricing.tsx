@@ -99,26 +99,26 @@ export function Pricing({
                 {plans.map((plan, index) => (
                     <motion.div
                         key={index}
-                        initial={{ y: 50, opacity: 1 }}
-                        whileInView={
-                            isDesktop
+                        {...({
+                            initial: { y: 50, opacity: 1 },
+                            whileInView: isDesktop
                                 ? {
                                     y: plan.isPopular ? -20 : 0,
                                     opacity: 1,
                                     x: index === 2 ? -30 : index === 0 ? 30 : 0,
                                     scale: index === 0 || index === 2 ? 0.94 : 1.0,
                                 }
-                                : {}
-                        }
-                        viewport={{ once: true }}
-                        transition={{
-                            duration: 1.6,
-                            type: "spring",
-                            stiffness: 100,
-                            damping: 30,
-                            delay: 0.4,
-                            opacity: { duration: 0.5 },
-                        }}
+                                : {},
+                            viewport: { once: true },
+                            transition: {
+                                duration: 1.6,
+                                type: "spring",
+                                stiffness: 100,
+                                damping: 30,
+                                delay: 0.4,
+                                opacity: { duration: 0.5 },
+                            },
+                        } as any)}
                         className={cn(
                             `rounded-2xl border-[1px] p-6 bg-background text-center lg:flex lg:flex-col lg:justify-center relative`,
                             plan.isPopular ? "border-primary border-2" : "border-border",

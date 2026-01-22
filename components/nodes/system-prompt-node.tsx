@@ -10,7 +10,7 @@ interface SystemPromptNodeData {
   [key: string]: unknown
 }
 
-export function SystemPromptNode({ data, selected, id }: NodeProps) {
+export function SystemPromptNode({ data, selected, id }: NodeProps<any>) {
   const nodeData = data as any
 
   return (
