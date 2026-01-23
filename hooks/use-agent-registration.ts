@@ -113,9 +113,13 @@ export function useAgentRegistration() {
 
             const metadata = [
                 { key: "name", value: stringToHex(agentName) },
+                { key: "creatorName", value: stringToHex("Project 0rca") },
                 { key: "description", value: stringToHex(agentDescription) },
-                { key: "agent_contract", value: stringToHex(contractAddr) },
-                { key: "created_at", value: stringToHex(new Date().toISOString()) }
+                { key: "createdAt", value: stringToHex(new Date().toISOString()) },
+                { key: "status", value: stringToHex("active") },
+                { key: "address", value: stringToHex(contractAddr) },
+                { key: "reputationScore", value: stringToHex("0") },
+                { key: "validationScore", value: stringToHex("0") }
             ]
 
             const { request } = await publicClient.simulateContract({
