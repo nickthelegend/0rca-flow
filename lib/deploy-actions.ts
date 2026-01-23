@@ -45,6 +45,14 @@ export async function deployAgent(agentId: string, nodes: any[], edges: any[]) {
         const envVars = extractEnvVars(nodes)
         formData.append('envVars', JSON.stringify(envVars))
 
+        // Extract metadata for better DB indexing
+        const coreNode = nodes.find(n => n.type === 'agentCore' || n.type === 'cryptoComAgent')
+        const humanName = coreNode?.data?.name || "Unnamed Agent"
+        const description = coreNode?.data?.description || "An AI agent on 0rca Network"
+
+        formData.append('name', humanName)
+        formData.append('description', description)
+
         console.log(`[0rca-Deployer] Protocol: POST ${DEPLOYER_URL}`)
         console.log(`[0rca-Deployer] Payload: ${envVars.length} Environment Variables`)
         envVars.forEach(v => {
