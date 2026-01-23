@@ -32,8 +32,8 @@ interface WorkflowType {
   name: string
   description?: string
   category?: string
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
   nodes: any[]
   edges: any[]
 }
@@ -44,8 +44,8 @@ interface AgentType {
   description?: string
   category?: string
   model?: string
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
 }
 
 export default function HomePage() {
@@ -406,7 +406,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <div className="text-2xl font-bold">
-                        {workflows.length > 0 ? new Date(workflows[0].updatedAt).toLocaleDateString() : "N/A"}
+                        {workflows.length > 0 ? new Date(workflows[0].updated_at).toLocaleDateString() : "N/A"}
                       </div>
                       <div className="text-sm text-white/50">Last Updated</div>
                     </div>
@@ -502,7 +502,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {new Date(workflow.updatedAt).toLocaleDateString()}
+                            {new Date(workflow.updated_at).toLocaleDateString()}
                           </div>
                         </div>
 
@@ -566,7 +566,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {new Date(agent.updatedAt).toLocaleDateString()}
+                            {new Date(agent.updated_at).toLocaleDateString()}
                           </div>
                         </div>
 

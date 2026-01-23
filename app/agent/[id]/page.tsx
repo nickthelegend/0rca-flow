@@ -164,7 +164,7 @@ const getDefaultNodeData = (type: string): Record<string, any> => {
     case "outputParser":
       return { format: "text", schema: null, validation: true }
     case "intelligenceModel":
-      return { model: "gpt-4o", provider: "openai" }
+      return { model: "gemini-2.0-flash", provider: "google" }
     case "telegram":
       return { botToken: "", chatId: "" }
     case "discord":

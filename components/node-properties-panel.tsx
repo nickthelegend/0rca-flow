@@ -1262,26 +1262,26 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[11px] text-white/60">Transport</Label>
+                    <Label className="text-[11px] text-white/40 uppercase font-bold tracking-tight">Transport</Label>
                     <Select value={node.data.transport || "http"} onValueChange={(v) => updateData("transport", v)}>
-                      <SelectTrigger className="h-11 border-white/5 bg-white/[0.03] rounded-xl">
+                      <SelectTrigger className="w-full h-11 border-white/5 bg-white/[0.03] rounded-xl text-xs">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a25]/95">
+                      <SelectContent className="bg-[#1a1a25]/95 border-white/10">
                         <SelectItem value="http">Streamable (HTTP)</SelectItem>
                         <SelectItem value="sse">SSE Handshake</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[11px] text-white/60">Auth Method</Label>
+                    <Label className="text-[11px] text-white/40 uppercase font-bold tracking-tight">Auth Method</Label>
                     <Select value={node.data.authMethod || "None"} onValueChange={(v) => updateData("authMethod", v)}>
-                      <SelectTrigger className="h-11 border-white/5 bg-white/[0.03] rounded-xl">
+                      <SelectTrigger className="w-full h-11 border-white/5 bg-white/[0.03] rounded-xl text-xs">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a25]/95">
+                      <SelectContent className="bg-[#1a1a25]/95 border-white/10">
                         <SelectItem value="None">No Auth</SelectItem>
                         <SelectItem value="API Key">API Key</SelectItem>
                         <SelectItem value="OAuth2">OAuth2</SelectItem>
@@ -1292,27 +1292,32 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
 
                 {node.data.authMethod === "API Key" && (
                   <MotionDiv
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="space-y-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4 p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10"
                   >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Key className="w-3.5 h-3.5 text-blue-400" />
+                      <Label className="text-[10px] font-bold text-blue-400/80 uppercase tracking-wider">Credential Configuration</Label>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold text-white/40 uppercase">Key Name</Label>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] text-white/30 uppercase font-medium">Key Name</Label>
                         <Input
-                          placeholder="e.g. X-API-Key"
+                          placeholder="X-API-Key"
                           value={node.data.keyName || ""}
                           onChange={(e) => updateData("keyName", e.target.value)}
-                          className="h-9 bg-black/20 border-white/5 text-xs"
+                          className="h-10 bg-black/40 border-white/5 text-[11px] rounded-lg focus:ring-1 focus:ring-blue-500/30"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold text-white/40 uppercase">Location</Label>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] text-white/30 uppercase font-medium">Location</Label>
                         <Select value={node.data.location || "Header"} onValueChange={(v) => updateData("location", v)}>
-                          <SelectTrigger className="h-9 bg-black/20 border-white/5 text-xs">
+                          <SelectTrigger className="w-full h-10 bg-black/40 border-white/5 text-[11px] rounded-lg">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#1a1a25]/95">
+                          <SelectContent className="bg-[#1a1a25]/95 border-white/10">
                             <SelectItem value="Header">Header</SelectItem>
                             <SelectItem value="Query">Query</SelectItem>
                             <SelectItem value="Cookie">Cookie</SelectItem>
@@ -1320,15 +1325,23 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
                         </Select>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-white/40 uppercase">Key Value</Label>
-                      <Input
-                        type="password"
-                        placeholder="sk-..."
-                        value={node.data.keyValue || ""}
-                        onChange={(e) => updateData("keyValue", e.target.value)}
-                        className="h-9 bg-black/20 border-white/5 text-xs font-mono"
-                      />
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-white/30 uppercase font-medium">Secret Key Value</Label>
+                      <div className="relative">
+                        <Input
+                          type={showKey ? "text" : "password"}
+                          placeholder="sk-..."
+                          value={node.data.keyValue || ""}
+                          onChange={(e) => updateData("keyValue", e.target.value)}
+                          className="h-10 bg-black/40 border-white/5 text-[11px] font-mono rounded-lg pr-10 focus:ring-1 focus:ring-blue-500/30"
+                        />
+                        <button
+                          onClick={() => setShowKey(!showKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+                        >
+                          {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
                     </div>
                   </MotionDiv>
                 )}
@@ -1457,13 +1470,13 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
               <div className="space-y-6">
                 <div className="space-y-2 hover:bg-white/[0.02] p-2 rounded-xl transition-colors">
                   <Label className="text-[11px] text-white/60">Provider</Label>
-                  <Select value={node.data.provider || "openai"} onValueChange={(v) => updateData("provider", v)}>
+                  <Select value={node.data.provider || "google"} onValueChange={(v) => updateData("provider", v)}>
                     <SelectTrigger className="h-11 border-white/5 bg-white/[0.03] rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a25]/95 border-white/10">
+                      <SelectItem value="google">Google Gemini (Recommended)</SelectItem>
                       <SelectItem value="openai">OpenAI (Primary)</SelectItem>
-                      <SelectItem value="google">Google Gemini</SelectItem>
                       <SelectItem value="anthropic">Anthropic Claude</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1471,13 +1484,14 @@ export function NodePropertiesPanel({ node: originalNode, onClose, onUpdateNodeD
 
                 <div className="space-y-2 hover:bg-white/[0.02] p-2 rounded-xl transition-colors">
                   <Label className="text-[11px] text-white/60">Model Selection</Label>
-                  <Select value={node.data.model || "gpt-4o"} onValueChange={(v) => updateData("model", v)}>
+                  <Select value={node.data.model || "gemini-2.0-flash"} onValueChange={(v) => updateData("model", v)}>
                     <SelectTrigger className="h-11 border-white/5 bg-white/[0.03] rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a25]/95 border-white/10">
                       {node.data.provider === "google" ? (
                         <>
+                          <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash (Fastest)</SelectItem>
                           <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
                           <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
                         </>

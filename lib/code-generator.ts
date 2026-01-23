@@ -78,24 +78,43 @@ export function generateAISDKCode(nodes: Node<any>[], edges: Edge<any>[]): strin
         nodeCode += `${indent}// Text Model Node\n`
         const textInputVars = getInputVariables(nodeId)
         const textInputVar = textInputVars.length > 0 ? textInputVars[0] : '""'
+        const modelProvider = node.data.provider || "google"
+        const modelId = node.data.model || "gemini-2.0-flash"
+        const fullModel = modelProvider === 'google' ? `google('${modelId}')` : `openai('${modelId}')`
 
         if (node.data.structuredOutput && node.data.schema) {
           nodeCode += `${indent}const ${varName}_schema = z.object(${node.data.schema});\n`
           nodeCode += `${indent}const ${varName}_result = await generateObject({\n`
-          nodeCode += `${indent}  model: '${node.data.model || "openai/gpt-5-mini"}',\n`
+          nodeCode += `${indent}  model: ${fullModel},\n`
           nodeCode += `${indent}  schema: ${varName}_schema,\n`
           nodeCode += `${indent}  prompt: ${textInputVar},\n`
           nodeCode += `${indent}});\n`
           nodeCode += `${indent}const ${varName} = JSON.stringify(${varName}_result.object);\n\n`
         } else {
           nodeCode += `${indent}const ${varName}_result = await generateText({\n`
-          nodeCode += `${indent}  model: '${node.data.model || "openai/gpt-5-mini"}',\n`
+          nodeCode += `${indent}  model: ${fullModel},\n`
           nodeCode += `${indent}  prompt: ${textInputVar},\n`
           nodeCode += `${indent}  temperature: ${node.data.temperature || 0.7},\n`
           nodeCode += `${indent}  maxTokens: ${node.data.maxTokens || 2000},\n`
           nodeCode += `${indent}});\n`
           nodeCode += `${indent}const ${varName} = ${varName}_result.text;\n\n`
         }
+        break
+
+      case "intelligenceModel":
+        nodeCode += `${indent}// Intelligence Gateway Node\n`
+        const intelInputVars = getInputVariables(nodeId)
+        const intelInputVar = intelInputVars.length > 0 ? intelInputVars[0] : '""'
+        const intelProvider = node.data.provider || "google"
+        const intelModelId = node.data.model || "gemini-2.0-flash"
+        const intelFullModel = intelProvider === 'google' ? `google('${intelModelId}')` : `openai('${intelModelId}')`
+
+        nodeCode += `${indent}const ${varName}_result = await generateText({\n`
+        nodeCode += `${indent}  model: ${intelFullModel},\n`
+        nodeCode += `${indent}  prompt: ${intelInputVar},\n`
+        nodeCode += `${indent}  temperature: ${node.data.temperature || 0.7},\n`
+        nodeCode += `${indent}});\n`
+        nodeCode += `${indent}const ${varName} = ${varName}_result.text;\n\n`
         break
 
       case "imageGeneration":
@@ -284,9 +303,13 @@ export function generateRouteHandlerCode(nodes: Node<any>[], edges: Edge<any>[])
   if (hasTextModel) {
     const textNode = nodes.find((n) => n.type === "textModel")
     if (textNode) {
+      const modelProvider = textNode.data.provider || "google"
+      const modelId = textNode.data.model || "gemini-2.0-flash"
+      const fullModel = modelProvider === 'google' ? `google('${modelId}')` : `openai('${modelId}')`
+
       code += `    // Text Generation\n`
       code += `    const result = await generateText({\n`
-      code += `      model: '${textNode.data.model || "openai/gpt-5-mini"}',\n`
+      code += `      model: ${fullModel},\n`
       code += `      prompt: input,\n`
       code += `      temperature: ${textNode.data.temperature || 0.7},\n`
       code += `      maxTokens: ${textNode.data.maxTokens || 2000},\n`

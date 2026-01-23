@@ -5,7 +5,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react"
 import { Cpu } from "lucide-react"
 
 export function IntelligenceModelNode({ data, selected }: NodeProps<any>) {
-    const modelName = (data.model as string) || "gpt-4o"
+    const modelName = (data.model as string) || "gemini-2.0-flash"
 
     return (
         <div className={`relative group transition-all duration-300 ${selected ? "scale-110" : "hover:scale-105"}`}>
@@ -29,7 +29,7 @@ export function IntelligenceModelNode({ data, selected }: NodeProps<any>) {
 
             {/* Label outside circular node */}
             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="text-[11px] font-bold text-white/40 group-hover:text-white/80 transition-colors uppercase tracking-[0.2em]">OpenAI Chat Model</span>
+                <span className="text-[11px] font-bold text-white/40 group-hover:text-white/80 transition-colors uppercase tracking-[0.2em]">Google Gemini Model</span>
             </div>
         </div>
     )

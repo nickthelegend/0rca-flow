@@ -88,7 +88,18 @@ function generateAgentCode(agentId: string, nodes: any[], edges: any[]) {
     const systemPromptNode = nodes.find(n => n.type === 'systemPrompt')
 
     const name = coreNode?.data?.name || agentId
-    const model = modelNode?.data?.model || "gemini/gemini-2.0-flash"
+    let model = modelNode?.data?.model || "gemini-2.0-flash"
+    const provider = modelNode?.data?.provider || "google"
+
+    // Ensure the model string has a provider prefix if it doesn't already
+    if (!model.includes('/') && provider === 'google') {
+        model = `google/${model}`
+    } else if (!model.includes('/') && provider === 'openai') {
+        model = `openai/${model}`
+    } else if (model === "gemini-2.0-flash") {
+        model = "gemini/gemini-2.0-flash"
+    }
+
     const systemPrompt = systemPromptNode?.data?.content || "You are a helpful AI assistant."
     const vaultAddress = walletNode?.data?.address || ""
 
