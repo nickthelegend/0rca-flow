@@ -344,12 +344,28 @@ function AgentBuilderInner() {
       if (error) throw error
       setLastSaved(new Date())
       console.log("[0rca] Agent saved successfully")
+
+      // Sync to 'agents' table if registered
+      if (isRegistered) {
+        const coreNode = nodes.find(n => n.type === 'agentCore' || n.type === 'cryptoComAgent')
+        const displayName = String(coreNode?.data?.name || agentName)
+        const displayDesc = String(coreNode?.data?.description || "A sovereign agent built on 0rca")
+
+        await supabase
+          .from("agents")
+          .update({
+            name: displayName,
+            description: displayDesc,
+            updated_at: new Date().toISOString()
+          })
+          .eq("subdomain", `${agentId}.0rca.live`)
+      }
     } catch (error) {
       console.error("Error saving agent:", error)
     } finally {
       setIsSaving(false)
     }
-  }, [nodes, edges, agentName, agentId, walletAddress, persistedAddress])
+  }, [nodes, edges, agentName, agentId, walletAddress, persistedAddress, isRegistered])
 
   // Deploy Agent
   const handleDeploy = useCallback(async () => {
@@ -381,7 +397,7 @@ function AgentBuilderInner() {
   }, [nodes, edges, agentId, handleSave])
 
   const handleRegisterOnChain = useCallback(async () => {
-    const coreNode = nodes.find(n => n.type === 'agentCore')
+    const coreNode = nodes.find(n => n.type === 'agentCore' || n.type === 'cryptoComAgent')
     const name = String(coreNode?.data?.name || agentName)
     const description = String(coreNode?.data?.description || "A sovereign agent built on 0rca")
 
@@ -417,7 +433,8 @@ function AgentBuilderInner() {
           .from("agents")
           .upsert({
             user_id: user?.id,
-            name: agentId,
+            name: name,
+            description: description,
             subdomain: `${agentId}.0rca.live`,
             contract_address: result.agentContractAddress,
             updated_at: new Date().toISOString()

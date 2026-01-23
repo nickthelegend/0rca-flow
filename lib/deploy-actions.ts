@@ -17,7 +17,7 @@ export async function deployAgent(agentId: string, nodes: any[], edges: any[]) {
         const zip = new JSZip()
         zip.file("agent.py", agentCode)
 
-        let requirements = `orca-network-sdk>=1.0.5\npython-dotenv\ncrewai[google-genai]\ncrewai-tools\n`
+        let requirements = `orca-network-sdk>=1.0.8\npython-dotenv\ncrewai[google-genai]\ncrewai-tools\n`
         const useCryptoComAgent = nodes.some(n => n.type === 'cryptoComAgent');
         const useCrewAI = nodes.some(n => n.type === 'crewaiTool' || n.type === 'toolkit');
 
