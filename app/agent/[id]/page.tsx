@@ -91,10 +91,12 @@ import DebuggerNode from "@/components/nodes/debugger-node"
 import StateNode from "@/components/nodes/state-node"
 import WalletNode from "@/components/nodes/wallet-node"
 import { deployAgent } from "@/lib/deploy-actions"
-import { toast } from "sonner"
 import { DeploymentModal } from "@/components/deployment-modal"
+import { toast } from "sonner"
 import { useAgentRegistration } from "@/hooks/use-agent-registration"
 import { RegistrationModal } from "@/components/registration-modal"
+import { saveContract, getContract } from "@/lib/indexed-db"
+import { CreateAgentModal } from "@/components/create-agent-modal"
 
 import { CryptoComAgentNode } from "@/components/nodes/crypto-com-agent-node"
 import { ToolkitNode } from "@/components/nodes/toolkit-node"
@@ -244,6 +246,7 @@ function AgentBuilderInner() {
   } = useAgentRegistration()
 
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
+  const [showCreateAgentModal, setShowCreateAgentModal] = useState(false)
 
   // Load Agent
   useEffect(() => {
@@ -261,14 +264,25 @@ function AgentBuilderInner() {
         }
 
         if (data) {
-          setPersistedAddress(data.contract_address || null)
+          // Priority: DB column > IndexedDB fallback
+          let contractAddress = data.contract_address || null
+
+          if (!contractAddress) {
+            const localContract = await getContract(agentId)
+            if (localContract) {
+              contractAddress = localContract
+              console.log("[0rca] Restored contract address from IndexedDB:", contractAddress)
+            }
+          }
+
+          setPersistedAddress(contractAddress)
           let loadedNodes = data.nodes || initialNodesList
 
-          // Sync contract address into wallet node if present in DB but missing in nodes
-          if (data.contract_address) {
+          // Sync contract address into wallet node if present
+          if (contractAddress) {
             loadedNodes = loadedNodes.map((n: any) => {
               if (n.type === 'wallet' && !n.data?.address) {
-                return { ...n, data: { ...n.data, address: data.contract_address } }
+                return { ...n, data: { ...n.data, address: contractAddress } }
               }
               return n
             })
@@ -377,8 +391,15 @@ function AgentBuilderInner() {
     if (result && result.agentContractAddress) {
       setPersistedAddress(result.agentContractAddress)
 
-      // 0. Update nodes in local state (so wallet node shows the address)
-      // This is crucial because it will be saved into the 'nodes' JSONB column
+      // 0. Save to IndexedDB for immediate local persistence
+      try {
+        await saveContract(agentId, result.agentContractAddress)
+        console.log("[0rca] Contract saved to IndexedDB")
+      } catch (idxError) {
+        console.error("Failed to save to IndexedDB:", idxError)
+      }
+
+      // 1. Update nodes in local state (so wallet node shows the address)
       const updatedNodes = nodes.map(node => {
         if (node.type === 'wallet') {
           return { ...node, data: { ...node.data, address: result.agentContractAddress } }
@@ -388,32 +409,35 @@ function AgentBuilderInner() {
       setNodes(updatedNodes)
 
       try {
-        // Get the actual Supabase User UUID (EVM address !== UUID)
+        // Get the actual Supabase User UUID
         const { data: { user } } = await supabase.auth.getUser()
 
-        // 1. Update live Agent record
+        // 2. Update live Agent record
         await supabase
           .from("agents")
           .upsert({
-            user_id: user?.id, // Use the real UUID from Supabase auth
+            user_id: user?.id,
             name: agentId,
             subdomain: `${agentId}.0rca.live`,
             contract_address: result.agentContractAddress,
             updated_at: new Date().toISOString()
           }, { onConflict: 'subdomain' })
 
-        // 2. Trigger a save of the workflow to persist nodes JSON (which now has the address)
+        // 3. Update the workflow record with the contract address and updated nodes
         await supabase
           .from("agent_workflows")
           .update({
             nodes: updatedNodes,
+            contract_address: result.agentContractAddress, // Attempting to update the column if it exists
             updated_at: new Date().toISOString()
-          })
+          } as any) // Cast to any to bypass potential type mismatch if column is missing in Types
           .eq('id', agentId)
 
-        console.log("[0rca] Supabase synced with on-chain identity via nodes JSON and agents table (subdomain match)")
+        console.log("[0rca] Supabase and local state fully synced with on-chain identity")
+        toast.success("Agent registered successfully!")
       } catch (e) {
         console.error("Failed to sync registration to Supabase:", e)
+        toast.error("Registered on-chain, but failed to sync with database.")
       }
     }
   }, [nodes, agentName, agentId, registerAgent])
@@ -704,6 +728,8 @@ function AgentBuilderInner() {
         <div className="flex items-center justify-between h-full px-6">
           <div className="flex items-center gap-4">
             <LogoDropdown
+              onCreateAgent={() => setShowCreateAgentModal(true)}
+              onHome={() => router.push("/")}
               onSignOut={async () => {
                 await disconnect()
                 router.push("/")
@@ -902,6 +928,15 @@ function AgentBuilderInner() {
         agentContractAddress={agentContractAddress}
         error={registrationError}
       />
+      {showCreateAgentModal && (
+        <CreateAgentModal
+          onClose={() => setShowCreateAgentModal(false)}
+          onCreate={(newAgentId) => {
+            setShowCreateAgentModal(false)
+            router.push(`/agent/${newAgentId}`)
+          }}
+        />
+      )}
     </div>
   )
 }

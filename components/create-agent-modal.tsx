@@ -129,7 +129,7 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Create AI Agent</h2>
-                <p className="text-sm text-white/50">Step {step} of 3</p>
+                <p className="text-sm text-white/50">Setup your agent details</p>
               </div>
             </div>
             <button
@@ -140,189 +140,72 @@ export function CreateAgentModal({ onClose, onCreate }: CreateAgentModalProps) {
             </button>
           </div>
 
-          {/* Progress Bar */}
+          {/* Progress Bar (Single Step) */}
           <div className="mt-6 flex gap-2">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`h-1 flex-1 rounded-full transition-all ${s <= step ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-white/10"
-                  }`}
-              />
-            ))}
+            <div className="h-1 flex-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
           </div>
         </div>
 
         {/* Content */}
         <div className="p-6 max-h-[60vh] overflow-y-auto">
-          {step === 1 && (
-            <div className="space-y-6 animate-in fade-in-0 slide-in-from-right-4 duration-300">
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Agent Name</label>
-                <Input
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="e.g., Research Assistant"
-                  className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Description</label>
-                <Textarea
-                  value={agentDescription}
-                  onChange={(e) => setAgentDescription(e.target.value)}
-                  placeholder="What does this agent do?"
-                  className="bg-white/5 border-white/10 text-white min-h-[100px] rounded-xl resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-3">Agent Type</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {agentCategories.map((cat) => {
-                    const Icon = cat.icon
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`p-4 rounded-xl border text-left transition-all ${selectedCategory === cat.id
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
-                          }`}
+          <div className="space-y-6 animate-in fade-in-0 slide-in-from-right-4 duration-300">
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2">Agent Name</label>
+              <Input
+                value={agentName}
+                onChange={(e) => setAgentName(e.target.value)}
+                placeholder="e.g., Research Assistant"
+                className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2">Description</label>
+              <Textarea
+                value={agentDescription}
+                onChange={(e) => setAgentDescription(e.target.value)}
+                placeholder="What does this agent do?"
+                className="bg-white/5 border-white/10 text-white min-h-[100px] rounded-xl resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-3">Agent Type</label>
+              <div className="grid grid-cols-2 gap-3">
+                {agentCategories.map((cat) => {
+                  const Icon = cat.icon
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`p-4 rounded-xl border text-left transition-all ${selectedCategory === cat.id
+                        ? "border-emerald-500 bg-emerald-500/10"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                        }`}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center mb-3`}
                       >
-                        <div
-                          className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center mb-3`}
-                        >
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
-                        <h4 className="font-medium text-white">{cat.name}</h4>
-                        <p className="text-xs text-white/50 mt-1">{cat.description}</p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6 animate-in fade-in-0 slide-in-from-right-4 duration-300">
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-3">Select AI Model</label>
-                <div className="space-y-2">
-                  {agentModels.map((model) => (
-                    <button
-                      key={model.id}
-                      onClick={() => setSelectedModel(model.id)}
-                      className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between ${selectedModel === model.id
-                        ? "border-emerald-500 bg-emerald-500/10"
-                        : "border-white/10 bg-white/5 hover:bg-white/10"
-                        }`}
-                    >
-                      <div>
-                        <h4 className="font-medium text-white">{model.name}</h4>
-                        <p className="text-xs text-white/50">
-                          {model.provider} - {model.description}
-                        </p>
+                        <Icon className="w-5 h-5 text-white" />
                       </div>
-                      {selectedModel === model.id && (
-                        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
+                      <h4 className="font-medium text-white">{cat.name}</h4>
+                      <p className="text-xs text-white/50 mt-1">{cat.description}</p>
                     </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-3">Select Tools</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {agentTools.map((tool) => (
-                    <button
-                      key={tool.id}
-                      onClick={() => toggleTool(tool.id)}
-                      className={`p-3 rounded-xl border text-left transition-all ${selectedTools.includes(tool.id)
-                        ? "border-emerald-500 bg-emerald-500/10"
-                        : "border-white/10 bg-white/5 hover:bg-white/10"
-                        }`}
-                    >
-                      <h4 className="font-medium text-white text-sm">{tool.name}</h4>
-                      <p className="text-xs text-white/50">{tool.description}</p>
-                    </button>
-                  ))}
-                </div>
+                  )
+                })}
               </div>
             </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6 animate-in fade-in-0 slide-in-from-right-4 duration-300">
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">System Prompt</label>
-                <Textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  placeholder="Define the agent's behavior, personality, and instructions..."
-                  className="bg-white/5 border-white/10 text-white min-h-[200px] rounded-xl resize-none font-mono text-sm"
-                />
-              </div>
-
-              {/* Summary */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  Agent Summary
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-white/50">Name</span>
-                    <span className="text-white">{agentName || "Untitled"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/50">Type</span>
-                    <span className="text-white">{selectedCategory || "General"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/50">Model</span>
-                    <span className="text-white">{agentModels.find((m) => m.id === selectedModel)?.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/50">Tools</span>
-                    <span className="text-white">{selectedTools.length} selected</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/5 p-6 flex justify-between">
-          {step > 1 ? (
-            <Button variant="ghost" onClick={() => setStep(step - 1)} className="text-white/70 hover:text-white">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          ) : (
-            <div />
-          )}
-
-          {step < 3 ? (
-            <Button
-              onClick={() => setStep(step + 1)}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
-            >
-              Continue
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleCreate}
-              disabled={isCreating}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white disabled:opacity-50"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              {isCreating ? "Creating..." : "Create Agent"}
-            </Button>
-          )}
+        <div className="border-t border-white/5 p-6 flex justify-end">
+          <Button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white disabled:opacity-50"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            {isCreating ? "Creating..." : "Create Agent"}
+          </Button>
         </div>
       </div>
     </div>

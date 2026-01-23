@@ -17,14 +17,14 @@ import {
 } from "lucide-react"
 
 type LogoDropdownProps = {
-  onNewWorkflow?: () => void
+  onCreateAgent?: () => void
   onDuplicate?: () => void
   onHome?: () => void
   onSignOut?: () => void
   onOpenChange?: (isOpen: boolean) => void
 }
 
-export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut, onOpenChange }: LogoDropdownProps) {
+export function LogoDropdown({ onCreateAgent, onDuplicate, onHome, onSignOut, onOpenChange }: LogoDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -46,20 +46,20 @@ export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut, on
     {
       type: "action",
       icon: Plus,
-      label: "Craft New Workflow",
-      onClick: onNewWorkflow,
+      label: "Create New AI Agent",
+      onClick: onCreateAgent,
       highlight: true,
     },
     {
       type: "action",
       icon: Copy,
-      label: "Duplicate Workflow",
+      label: "Duplicate Agent",
       onClick: onDuplicate,
     },
     {
       type: "action",
       icon: Clock,
-      label: "Recent Workflows",
+      label: "Recent Agents",
       onClick: () => { },
     },
     { type: "divider" },
@@ -72,7 +72,7 @@ export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut, on
     {
       type: "action",
       icon: Layers,
-      label: "Workflows",
+      label: "Agents",
       onClick: () => { },
     },
     {
@@ -143,10 +143,10 @@ export function LogoDropdown({ onNewWorkflow, onDuplicate, onHome, onSignOut, on
                     }}
                     disabled={item.locked}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all ${item.highlight
-                        ? "text-violet-400 hover:bg-violet-500/10"
-                        : item.locked
-                          ? "cursor-not-allowed text-muted-foreground/50"
-                          : "text-foreground hover:bg-white/5"
+                      ? "text-violet-400 hover:bg-violet-500/10"
+                      : item.locked
+                        ? "cursor-not-allowed text-muted-foreground/50"
+                        : "text-foreground hover:bg-white/5"
                       }`}
                   >
                     <Icon className="h-4 w-4" />
