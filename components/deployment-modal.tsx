@@ -129,6 +129,16 @@ export function DeploymentModal({ isOpen, onClose, deploymentData }: DeploymentM
                                 <Terminal className="w-3 h-3" />
                                 {steps[step]}
                             </div>
+                            {progress < 100 && (
+                                <div className="mt-4 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-3">
+                                    <div className="p-1 rounded-md bg-blue-500/10 text-blue-400">
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                    </div>
+                                    <p className="text-[10px] leading-relaxed text-blue-300/60 font-medium">
+                                        Kubernetes is currently provisioning your agent. Please wait about 3 minutes for the service to become fully operational.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {progress === 100 && (
@@ -156,7 +166,13 @@ export function DeploymentModal({ isOpen, onClose, deploymentData }: DeploymentM
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-3">
+                                    <div className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/10 flex items-start gap-3">
+                                        <Loader2 className="w-3 h-3 text-orange-400 mt-0.5 animate-spin" />
+                                        <p className="text-[10px] text-orange-300/60 leading-tight">
+                                            Deployment is finishing. If the link doesn't work yet, please wait 3 minutes for Kubernetes to complete the rollout.
+                                        </p>
+                                    </div>
                                     <Button
                                         className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-6 rounded-2xl gap-2 shadow-lg shadow-emerald-500/20"
                                         onClick={() => window.open(deploymentData.url, '_blank')}
